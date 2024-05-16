@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Tibirlayn/R2Hunter/internal/app"
 	"github.com/Tibirlayn/R2Hunter/internal/config"
+	"github.com/Tibirlayn/R2Hunter/internal/http-server/routers"
 	"github.com/Tibirlayn/R2Hunter/internal/logger"
 	"github.com/Tibirlayn/R2Hunter/internal/logger/sl"
 	"github.com/Tibirlayn/R2Hunter/storage/mssql"
-
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -39,7 +42,17 @@ func main() {
  */
 
 	// инициализировать роутер: fiber
-	
+	appf := fiber.New()
+
+	appf.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+		AllowOrigins:     "http://localhost:3000",
+	}))
+
+	routers.New(appf)
 
 	// инициализировать приложение (app):
+	if err := app.App(appf, cfg); err != nil {
+		log.Error("faild to init Listen", sl.Err(err))
+	}
 }
