@@ -31,24 +31,16 @@ func main() {
 
 	fmt.Println(storage)
 
-	// инициализировать роутер: chi
-/* 	router := chi.NewRouter()
-
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
- 	router.Use(mwLogger.New(log))  логирование запросов подробнее узнать github.com/Tibirlayn/R2Hunter/internal/http-server/middleware/logger
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.URLFormat)
- */
-
 	// инициализировать роутер: fiber
 	appf := fiber.New()
 
+	// необходимо почитать и переместить в другую папку middleware
 	appf.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOrigins:     "http://localhost:3000",
 	}))
 
+	// роутер
 	routers.New(appf)
 
 	// инициализировать приложение (app):
