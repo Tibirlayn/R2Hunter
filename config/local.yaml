@@ -1,5 +1,6 @@
 env: "local"
 storage_path: "./storage/storage.db" # не понадовиться 
+token_ttl: 10h 
 http_server:
   address: "localhost:8087" 
   timeout: 4s

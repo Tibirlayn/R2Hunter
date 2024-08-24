@@ -8,8 +8,6 @@ import (
 
 	"github.com/Tibirlayn/R2Hunter/internal/app"
 	"github.com/Tibirlayn/R2Hunter/internal/config"
-
-	// "github.com/Tibirlayn/R2Hunter/internal/http-server/routers"
 	"github.com/Tibirlayn/R2Hunter/internal/logger"
 )
 
@@ -25,7 +23,7 @@ func main() {
 	// routers.New(appf)
 
 	// инициализировать приложение (app):
-	application := app.New(log, cfg.HTTPServer.Address, cfgdb);
+	application := app.New(log, cfg.HTTPServer.Address, cfgdb, cfg.TokenTTL);
 
 	go func() {
 		application.RestApi.MustLoad()

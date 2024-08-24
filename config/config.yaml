@@ -1,42 +1,42 @@
 account:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLAccount
 battle:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLBattle
 billing:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLBilling
 game:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLGame2155
 logs:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLLog
 parm:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLParm
 statistics:
   server: localhost
   user: R2Hunter
-  password: 123456
+  password: 756SAd
   port: 1433
   namedb: FNLStatistics

@@ -3,9 +3,11 @@ package app
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/Tibirlayn/R2Hunter/internal/app/restapi"
 	"github.com/Tibirlayn/R2Hunter/internal/config"
+	"github.com/Tibirlayn/R2Hunter/internal/service/account/auth"
 	"github.com/Tibirlayn/R2Hunter/storage/mssql"
 )
 
@@ -13,20 +15,13 @@ type App struct {
 	RestApi *restapi.App
 }
 
-func New(log *slog.Logger, address string, cfgdb *config.ConfigDB) *App {
+func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time.Duration) *App {
 
 	// инициализировать СУБД: MS SQL
-	storage, err := mssql.New(cfgdb)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(storage)
-
 	accStorage, err := mssql.NewAccountStorage(cfgdb)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(accStorage)
 
 	batStorage, err := mssql.NewBattleStorage(cfgdb)
 	if err != nil {
@@ -64,9 +59,8 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB) *App {
 	}
 	fmt.Println(statStorage)
 
-	
-
-	restapi := restapi.New(log, address)
+	authService := auth.New(log, accStorage, accStorage, accStorage, tokenTLL)
+	restapi := restapi.New(log, authService, address)
 
 	return &App{RestApi: restapi}
 }

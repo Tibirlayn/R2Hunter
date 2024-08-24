@@ -18,10 +18,10 @@ type App struct {
 	address string
 }
 
-func New(log *slog.Logger, address string) *App {
+func New(log *slog.Logger, authService authRestAPI.Auth, address string) *App {
 	// инициализировать роутер: fiber
 	appFiber := fiber.New()
-	authRestAPI.Register(appFiber, nil)
+	authRestAPI.Register(appFiber, authService)
 
 	return &App{
 		log: log,

@@ -1,13 +1,15 @@
 package routers
 
 import (
-	"github.com/Tibirlayn/R2Hunter/internal/restapi/account/auth"
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewRoutersAccount(appf *fiber.App, api *auth.ServerAPI) {
-	appf.Post("/login", func(c *fiber.Ctx) error {
-		
-		return nil
-	})
+type AuthHandler interface {
+	Login(c *fiber.Ctx) error
+    Register(c *fiber.Ctx) error
+}
+
+func NewRoutersAccount(appf *fiber.App, api AuthHandler) {
+	appf.Post("/login", api.Login)
+    appf.Post("/register", api.Register)
 }
