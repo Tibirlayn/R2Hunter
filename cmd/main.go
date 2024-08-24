@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Tibirlayn/R2Hunter/internal/app"
 	"github.com/Tibirlayn/R2Hunter/internal/config"
-	"github.com/Tibirlayn/R2Hunter/internal/http-server/routers"
+
+	// "github.com/Tibirlayn/R2Hunter/internal/http-server/routers"
 	"github.com/Tibirlayn/R2Hunter/internal/logger"
-	"github.com/Tibirlayn/R2Hunter/internal/logger/sl"
-	"github.com/Tibirlayn/R2Hunter/storage/mssql"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -22,29 +21,24 @@ func main() {
 	log := logger.SetupLogger(cfg.Env)
 	log.Info("starting application")
 
-	// инициализировать СУБД: MS SQL
-	storage, err := mssql.New(cfgdb)
-	if err != nil {
-		log.Error("faild to init storage", sl.Err(err))
-		os.Exit(1)
-	}
-
-	fmt.Println(storage)
-
-	// инициализировать роутер: fiber
-	appf := fiber.New()
-
-	// необходимо почитать и переместить в другую папку middleware
-	appf.Use(cors.New(cors.Config{
-		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:3000",
-	}))
-
 	// роутер
-	routers.New(appf)
+	// routers.New(appf)
 
 	// инициализировать приложение (app):
-	if err := app.App(appf, cfg); err != nil {
-		log.Error("faild to init Listen", sl.Err(err))
-	}
+	application := app.New(log, cfg.HTTPServer.Address, cfgdb);
+
+	go func() {
+		application.RestApi.MustLoad()
+	}()
+
+	// Настройка канала для получения сигналов завершения
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Ожидание сигнала
+	sign := <-quit
+	log.Info("stopping application", slog.String("signal", sign.String()))
+
+	application.RestApi.Stop()
+	log.Info("Server gracefully stopped")
 }
