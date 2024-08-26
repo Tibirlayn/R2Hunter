@@ -1,13 +1,13 @@
 package member
 
 import (
-	"debug/macho"
 	"fmt"
-	"strings"
 
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query"
 	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/member"
+	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,19 +18,15 @@ func init() {
 	validate = validator.New()
 }
 
+
+
 type Member interface {
 	// name = email, login, nikname
-	Member(ctx *fiber.Ctx, ) (
-			member account.Member, 
-			user account.User, 
-			userAdmin account.UserAdmin, 
-			pc game.Pc, 
-			pcInv game.PcInventory, 
-			pcState game.PcState, err error)
+	Member(ctx *fiber.Ctx, mp query.MemberParm) (memberParm query.MemberParm, err error)
 }
 
 type ServiceMemberAPI struct {
-	member Member
+	member     Member
 }
 
 func RegisterMember(RestAPI *fiber.App, member Member) {
@@ -39,46 +35,42 @@ func RegisterMember(RestAPI *fiber.App, member Member) {
 	routersMember.NewRoutersMember(RestAPI, api)
 }
 
-func (s *ServiceMemberAPI) Member(c *fiber.Ctx) error {
+func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 	const (
-		op = "restapi.account.member.Member"
+		op    = "restapi.account.member.Member"
 		empty = "empty"
 	)
 
 	var data map[string]string
-	if err := c.BodyParser(&data); err != nil {
+	if err := ctx.BodyParser(&data); err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}
-	
+
 	if data["name"] == "" {
 		return fmt.Errorf("%s, %s", op, "empty")
 	}
 
 	// TODO: проверить на валидацию логин или никнейм
-	login := removeEmailSymbols(data["name"])
-	validMember := account.Member{
-		Email: data["name"],
-		MUserId: login,
+	login := gen.RemoveEmailSymbols(data["name"])
+
+	validMember := query.MemberParm{ // Используем query.MemberParm, чтобы указать на структуру из пакета query
+		Member: account.Member{ // Используем с большой буквы, так как это экспортируемое поле
+			Email:   data["name"],
+			MUserId: login,
+		},
+		Pc: game.Pc{ // Используем с большой буквы, так как это экспортируемое поле
+			MNm: data["name"],
+		},
+	}
+	
+	if err := validate.Struct(validMember); err != nil {
+		return fmt.Errorf("%s, %w", op, err)
 	}
 
-	validNikname := game.Pc{
-		MNm: data["name"],
+	resultMemberParm, err := s.member.Member(ctx, validMember)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	// TODO: проверка на авторизацию 
-
-
-	return nil
-}
-
-func removeEmailSymbols(email string) string {
-	var result strings.Builder
-
-	for _, char := range email {
-		if char != '@' && char != '.' {
-			result.WriteRune(char)
-		}
-	}
-
-	return result.String()
+	return ctx.JSON(resultMemberParm)
 }

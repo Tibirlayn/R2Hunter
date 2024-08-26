@@ -7,6 +7,7 @@ import (
 	"time"
 
 	authRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/account/auth"
+	membRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/account/member"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -18,10 +19,11 @@ type App struct {
 	address string
 }
 
-func New(log *slog.Logger, authService authRestAPI.Auth, address string) *App {
+func New(log *slog.Logger, authService authRestAPI.Auth, memberService membRestAPI.Member, address string) *App {
 	// инициализировать роутер: fiber
 	appFiber := fiber.New()
 	authRestAPI.Register(appFiber, authService)
+	membRestAPI.RegisterMember(appFiber, memberService)
 
 	return &App{
 		log: log,

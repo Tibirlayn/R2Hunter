@@ -1,10 +1,13 @@
 package jwt
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -26,42 +29,39 @@ func NewToken(user account.Member, app models.App, duration time.Duration) (stri
 	return tokenString, nil
 }
 
-/*func ValidateToken(ctx *fiber.Ctx, secret string) (int64, error) {
-	// Получение метаданных с токеном доступа из контекста запроса
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return 0, status.Errorf(codes.InvalidArgument, "Metadata not provided")
-	}
+func ValidateToken(ctx *fiber.Ctx, secret string) (int64, error) {
+    // Получение токена доступа из заголовка Authorization
+    jwtToken := ctx.Get("Authorization")
+    if jwtToken == "" {
+        return 0, fmt.Errorf("authorization token is required")
+    }
 
-	// Проверка токена доступа
-	jwtToken := md.Get("authorization")
-	if len(jwtToken) < 1 {
-		return 0, status.Errorf(codes.Unauthenticated, "Authorization token is required")
-	}
+    tokenString := strings.TrimPrefix(jwtToken, "Bearer ")
 
-	tokenString := strings.TrimPrefix(jwtToken[0], "Bearer ") // Удаление "Bearer " из jwtToken
+    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+        return []byte(secret), nil
+    })
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Предоставьте секретный ключ для верификации токена
-		return []byte(secret), nil // secret - Предоставьте секретный ключ для вашего токена
-	})
+    if err != nil {
+        return 0, fmt.Errorf("failed to parse token: %v", err)
+    }
 
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse token: %v", err)
-	}
+    if !token.Valid {
+        return 0, fmt.Errorf("invalid token")
+    }
 
-	if !token.Valid {
-		return 0, fmt.Errorf("invalid token")
-	}
-	var userID int64
-	// Проверка времени истечения токена
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		exp := time.Unix(int64(claims["exp"].(float64)), 0)
-		userID = int64(claims["uid"].(float64))
-		if exp.Before(time.Now()) {
-			return 0, fmt.Errorf("token has expired")
-		}
-	}
-	// Валидация успешна
-	return userID, nil
-}*/
+    var userID int64
+
+    // Проверка времени действия токена
+    if claims, ok := token.Claims.(jwt.MapClaims); ok {
+        exp := time.Unix(int64(claims["exp"].(float64)), 0)
+        userID = int64(claims["uid"].(float64))
+
+        if exp.Before(time.Now()) {
+            return 0, fmt.Errorf("token has expired")
+        }
+    }
+
+    // Все проверки успешны - возврат userID
+    return userID, nil
+}
