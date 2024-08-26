@@ -23,15 +23,15 @@ type Auth struct {
 }
 
 type UserSaver interface {
-	SaveUser(ctx *fiber.Ctx, email string, password string) (uid int64, err error)
+	SaveUser(ctx *fiber.Ctx, email string, password string) (uid int64, err error) // Регистрация
 }
 
 type UserProvider interface {
-	User(ctx *fiber.Ctx, email string) (account.Member, error)
+	User(ctx *fiber.Ctx, email string) (account.Member, error) // Авторизация
 }
 
 type AppProvider interface {
-	App(ctx *fiber.Ctx, appID int) (models.App, error)
+	App(ctx *fiber.Ctx, appID int) (models.App, error) // App 
 }
 
 func New(

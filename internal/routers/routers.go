@@ -9,7 +9,7 @@ type AuthHandler interface {
     Register(c *fiber.Ctx) error
 }
 
-func NewRoutersAccount(appf *fiber.App, api AuthHandler) {
+func NewRoutersAuth(appf *fiber.App, api AuthHandler) {
 	appf.Post("/login", api.Login)
     appf.Post("/register", api.Register)
 }

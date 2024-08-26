@@ -25,3 +25,12 @@ func NewGameStorage(cfg_db *config.ConfigDB) (*GameStorage, error) {
 
 	return &GameStorage{db: db}, nil
 }
+
+func (s *GameStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

@@ -25,3 +25,12 @@ func NewParmStorage(cfg_db *config.ConfigDB) (*ParmStorage, error) {
 
 	return &ParmStorage{db: db}, nil
 }
+
+func (s *ParmStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

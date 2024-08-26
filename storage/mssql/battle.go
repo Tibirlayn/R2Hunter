@@ -25,3 +25,12 @@ func NewBattleStorage(cfg_db *config.ConfigDB) (*BattleStorage, error) {
 
 	return &BattleStorage{db: db}, nil
 }
+
+func (s *BattleStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

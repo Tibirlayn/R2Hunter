@@ -25,3 +25,12 @@ func NewLogsStorage(cfg_db *config.ConfigDB) (*LogsStorage, error) {
 
 	return &LogsStorage{db: db}, nil
 }
+
+func (s *LogsStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

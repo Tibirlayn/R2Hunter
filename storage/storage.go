@@ -29,4 +29,5 @@ var (
 	ErrCommit                  = errors.New("commit error")
 	ErrExists                  = errors.New("the data already exists")
 	ErrSave                    = errors.New("error update")
+	ErrValidEmail              = errors.New("no '@' symbol found in the email")
 )

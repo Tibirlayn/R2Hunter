@@ -25,3 +25,12 @@ func NewStatisticsStorage(cfg_db *config.ConfigDB) (*StatisticsStorage, error) {
 
 	return &StatisticsStorage{db: db}, nil
 }
+
+func (s *StatisticsStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

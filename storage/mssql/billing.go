@@ -25,3 +25,12 @@ func NewBillingStorage(cfg_db *config.ConfigDB) (*BillingStorage, error) {
 
 	return &BillingStorage{db: db}, nil
 }
+
+func (s *BillingStorage) Stop() error {
+	db, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}

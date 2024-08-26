@@ -3,6 +3,7 @@ package account
 import "time"
 
 // TblUser
+// "mRegDate", "mUserAuth", "mUserNo", "mUserId", "mUserPswd", "mCertifiedKey", "mIp", "mLoginTm", "mLogoutTm", "mTotUseTm", "mWorldNo", "mDelDate", "mPcBangLv", "mSecKeyTableUse", "mUseMacro", "mIpEx", "mJoinCode", "mLoginChannelID", "mTired", "mChnSID", "mNewId", "mLoginSvrType", "mAccountGuid", "mNormalLimitTime", "mPcBangLimitTime", "mRegIp", "mIsMovingToBattleSvr"
 type User struct {
 	MRegDate           time.Time `json:"mRegDate" gorm:"column:mRegDate"`
 	MUserAuth          uint8     `json:"mUserAuth" gorm:"column:mUserAuth"`

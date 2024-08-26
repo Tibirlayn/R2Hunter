@@ -44,7 +44,7 @@ func Register(RestAPI *fiber.App, auth Auth) {
 	api := &ServerAPI{auth: auth}
 
 	// Передача api как реализации интерфейса AuthHandler
-	routers.NewRoutersAccount(RestAPI, api) 
+	routers.NewRoutersAuth(RestAPI, api) 
 }
 
 func (s *ServerAPI) Login(c *fiber.Ctx) error {
@@ -55,7 +55,7 @@ func (s *ServerAPI) Login(c *fiber.Ctx) error {
 
 	var data map[string]string
 	if err := c.BodyParser(&data); err != nil {
-		return err
+		return fmt.Errorf("%s, %w", op, err)
 	}
 
 	appID, err := strconv.Atoi(data["app_id"])
