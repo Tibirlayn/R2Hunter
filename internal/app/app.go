@@ -9,6 +9,7 @@ import (
 	"github.com/Tibirlayn/R2Hunter/internal/config"
 	"github.com/Tibirlayn/R2Hunter/internal/service/account/auth"
 	"github.com/Tibirlayn/R2Hunter/internal/service/account/member"
+	"github.com/Tibirlayn/R2Hunter/internal/service/game/pc"
 	"github.com/Tibirlayn/R2Hunter/storage/mssql"
 )
 
@@ -40,7 +41,6 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(gamStorage)
 	
 	logStorage, err := mssql.NewLogsStorage(cfgdb)
 	if err != nil {
@@ -61,7 +61,8 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 	fmt.Println(statStorage)
 
 	authService := auth.New(log, accStorage, accStorage, accStorage, tokenTLL)
-	memberService := member.New(log, accStorage, authService, tokenTLL)
+	gamService := pc.New(log, gamStorage, tokenTLL)
+	memberService := member.New(log, accStorage, authService, gamService, tokenTLL)
 	restapi := restapi.New(log, authService, memberService, address)
 
 	return &App{RestApi: restapi}

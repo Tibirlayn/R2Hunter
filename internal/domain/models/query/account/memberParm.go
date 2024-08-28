@@ -12,4 +12,5 @@ type MemberParm struct {
 	Pc        game.Pc
 	PcInv     game.PcInventory
 	PcState   game.PcState
+	PcStore   game.PcStore
 }

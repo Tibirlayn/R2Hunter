@@ -7,7 +7,7 @@ type Member struct {
 	MUserPswd  string  `json:"mUserPswd" gorm:"column:mUserPswd;size:50"`
 	Superpwd   string  `json:"superpwd" gorm:"column:superpwd;size:50"`
 	Cash       float64 `json:"cash" gorm:"column:cash"`
-	Email      string  `json:"email" gorm:"column:email;size:255" validate:"required,email,min=3,max=25"`
+	Email      string  `json:"email" gorm:"column:email;size:255" validate:"required,min=3,max=25"`
 	Tgzh       string  `json:"tgzh" gorm:"column:tgzh;size:255"`
 	Uid        int     `json:"uid" gorm:"column:uid;not null"`
 	Klq        int     `json:"klq" gorm:"column:klq"`

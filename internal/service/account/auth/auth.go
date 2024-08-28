@@ -30,7 +30,7 @@ type UserSaver interface {
 
 // Авторизация
 type UserProvider interface {
-	User(ctx *fiber.Ctx, email string) (account.Member, error) 
+	User(ctx *fiber.Ctx, email string) (account.Member, account.User, error) 
 }
 
 type AppProvider interface {
@@ -62,7 +62,13 @@ func (a *Auth) Login(ctx *fiber.Ctx, user account.Member, appID int) (string, er
 
 	log.Info("attempting to login user")
 
-	resUser, err := a.usrProvider.User(ctx, user.Email)
+	app, err := a.appProvider.App(ctx, appID)
+	if err != nil {
+		a.log.Error(fmt.Sprintf("%s: %v", op, err))
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	resMember, resUser, err := a.usrProvider.User(ctx, user.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			a.log.Warn("user not found", "error", err)
@@ -72,16 +78,9 @@ func (a *Auth) Login(ctx *fiber.Ctx, user account.Member, appID int) (string, er
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	if resUser.MUserPswd != user.MUserPswd {
+	if resMember.MUserPswd != user.MUserPswd {
 		a.log.Info("invalid credentials", "error", err)
 		return "", fmt.Errorf("%s: %w", op, storage.ErrInvalidCredentials)
-	}
-
-
-	app, err := a.appProvider.App(ctx, appID)
-	if err != nil {
-		a.log.Error(fmt.Sprintf("%s: %v", op, err))
-		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("user logged in successfully")
@@ -123,7 +122,8 @@ func (a *Auth) RegisterNewUser(ctx *fiber.Ctx, user account.Member, appID int) (
 
 func (a *Auth) ValidJWT(ctx *fiber.Ctx, op string) (int64, error) {
 	// получаем секрет
-	app, err := a.appProvider.App(ctx, 1)
+	// TODO: должен брать из файла config 
+	app, err := a.appProvider.App(ctx, 2491)
 	if err != nil {
 		a.log.Error(fmt.Sprintf("%s: %v", op, err))
 		return 0, fmt.Errorf("%s: %w", op, err)

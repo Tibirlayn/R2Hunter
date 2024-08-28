@@ -6,11 +6,10 @@ import (
 
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
-	"github.com/Tibirlayn/R2Hunter/internal/routers"
+	routersAuth "github.com/Tibirlayn/R2Hunter/internal/routers/account/auth"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
-
 
 var validate *validator.Validate
 
@@ -41,7 +40,7 @@ func Register(RestAPI *fiber.App, auth Auth) {
 	api := &ServerAPI{auth: auth}
 
 	// Передача api как реализации интерфейса AuthHandler
-	routers.NewRoutersAuth(RestAPI, api)
+	routersAuth.NewRoutersAuth(RestAPI, api)
 }
 
 func (s *ServerAPI) Login(ctx *fiber.Ctx) error {
@@ -69,6 +68,7 @@ func (s *ServerAPI) Login(ctx *fiber.Ctx) error {
 		Email:    user.Email,
 		Password: user.MUserPswd,
 	}
+
 	if err := validate.Struct(ValidLogin); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

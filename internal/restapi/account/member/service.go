@@ -5,20 +5,19 @@ import (
 
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
-	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query"
-	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/member"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
+	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/account/member"
 	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
+
 
 var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
 }
-
-
 
 type Member interface {
 	// name = email, login, nikname
@@ -53,12 +52,12 @@ func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 	// TODO: проверить на валидацию логин или никнейм
 	login := gen.RemoveEmailSymbols(data["name"])
 
-	validMember := query.MemberParm{ // Используем query.MemberParm, чтобы указать на структуру из пакета query
-		Member: account.Member{ // Используем с большой буквы, так как это экспортируемое поле
+	validMember := query.MemberParm{ 
+		Member: account.Member{ 
 			Email:   data["name"],
 			MUserId: login,
 		},
-		Pc: game.Pc{ // Используем с большой буквы, так как это экспортируемое поле
+		Pc: game.Pc{ 
 			MNm: data["name"],
 		},
 	}
