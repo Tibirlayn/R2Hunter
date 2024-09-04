@@ -7,4 +7,5 @@ type PcParm struct {
 	PcInv   game.PcInventory
 	PcState game.PcState
 	PcStore game.PcStore
+
 }

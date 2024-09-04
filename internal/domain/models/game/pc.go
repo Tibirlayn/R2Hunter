@@ -21,6 +21,9 @@ type Pc struct {
 	MHomePosY  float64   `json:"mHomePosY" gorm:"column:mHomePosY"` // координаты расположения персонажа
 	MHomePosZ  float64   `json:"mHomePosZ" gorm:"column:mHomePosZ"` // координаты расположения персонажа
 	MDelDate   time.Time `json:"mDelDate" gorm:"column:mDelDate"`   // если стоит дата персонаж удален
+
+	PcInventories []PcInventory `gorm:"foreignKey:MPcNo;references:MNo"`
+	PcStates []PcState `gorm:"foreignKey:MNo;references:MNo"`
 }
 
 func (Pc) TableName() string {

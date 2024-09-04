@@ -1,6 +1,7 @@
 package pc
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -15,7 +16,7 @@ type Pc struct {
 }
 
 type GamePcProvider interface {
-	PcCard(ctx *fiber.Ctx, name string) (game.PcParm, error)
+	PcCard(ctx *fiber.Ctx, name string, pcID int64) ([]game.PcParm, error)
 }
 
 func New(log *slog.Logger, gamPcProvider GamePcProvider, tokenTTL time.Duration) *Pc {
@@ -26,7 +27,13 @@ func New(log *slog.Logger, gamPcProvider GamePcProvider, tokenTTL time.Duration)
 	}
 }
 
-func (g *Pc) PcCard(ctx *fiber.Ctx, nikname string) (pc game.PcParm, err error) {
+func (g *Pc) PcCard(ctx *fiber.Ctx, nikname string, pcID int64) (pc []game.PcParm, err error) {
+	const op = "service.game.pc.PcCard"
 
-	return pc, err
+	pcParm, err := g.gamPcProvider.PcCard(ctx, nikname, pcID)
+	if err != nil {
+		return pc, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return pcParm, err
 }

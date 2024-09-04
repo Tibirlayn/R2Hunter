@@ -20,7 +20,8 @@ type Member struct {
 }
 
 type UserMemberProvider interface {
-	Member(ctx *fiber.Ctx, mp query.MemberParm) (query.MemberParm, error)
+//	Member(ctx *fiber.Ctx, mp query.MemberParm) (query.MemberParm, error)
+	Member(ctx *fiber.Ctx, name string) (query.MemberParm, error)
 }
 
 func New(log *slog.Logger, userMemberProvider UserMemberProvider, auth *auth.Auth, pc *pc.Pc, tokenTTL time.Duration) *Member {
@@ -33,27 +34,53 @@ func New(log *slog.Logger, userMemberProvider UserMemberProvider, auth *auth.Aut
 	}
 }
 
-
-func (m *Member) Member(ctx *fiber.Ctx, mp query.MemberParm) (memberParm query.MemberParm, err error) {
+func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
 		const op = "service.account.member.Member"
+
+		var memberParm query.MemberParm
+		var errorList []error
 
 		// TODO: проверка на авторизацию 
 		userID, err := m.auth.ValidJWT(ctx, op)
 		if err != nil {
-			return mp, err
+			return memberParm, err
 		}
 
 		m.log.Info(fmt.Sprintf("admin %d checking user data", userID))
 
-		// посмотреть по имени персонажа 
-		// Если по персонажу есть данные получить все данные по account
-
-		
-
-		result, err := m.usrMemberProvider.Member(ctx, mp)
+		resultMember, err := m.usrMemberProvider.Member(ctx, name)
 		if err != nil {
-			return mp, fmt.Errorf("%s, %w", op, err)
+			m.log.Info("%s, %w", op, err)
+			errorList = append(errorList, err)
+			return resultMember, err // Вернуть ошибку, если не удалось получить данные
 		}
 
-		return result, nil
+		memberParm = resultMember
+
+		// Получаем срез pcCard, содержащий несколько PcParm
+		pcCards, err := m.pc.PcCard(ctx, name, int64(memberParm.User.MUserNo))
+		if err != nil {
+			m.log.Info("%s, %w", op, err)
+			errorList = append(errorList, err)
+			return memberParm, fmt.Errorf("%s, %w", op, err)
+		}
+
+		// Присваиваем срез pcCards к полю PcCards структуры memberParm
+		memberParm.PcCards = pcCards
+
+		return resultMember, nil
 }
+
+
+/* 			
+			pcCard, err := m.pc.PcCard(ctx, name, int64(resultMember.User.MUserNo))
+			if err != nil {
+				return memberParm, fmt.Errorf("%s, %w", op, err)
+			} 
+*/
+
+/*  			
+			resultMember.Pc = pcCard.Pc
+			resultMember.PcInv = pcCard.PcInv
+			resultMember.PcState = pcCard.PcState 
+*/

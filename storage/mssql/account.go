@@ -134,85 +134,44 @@ func (a *AccountStorage) App(ctx *fiber.Ctx, appID int) (models.App, error) {
 	return app, nil
 }
 
-func (a *AccountStorage) Member(ctx *fiber.Ctx, mp query.MemberParm) (query.MemberParm, error) {
+func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberParm, err error) {
 	const op = "storage.mssql.account.Member"
 
-	
+	var member account.Member
+	var user account.User
+	var userAdmin account.UserAdmin
 
-/* 	if resultPc := a.db.Where("mNm = ?", mp.Pc.MNm).First(&mp.Pc); resultPc.Error != nil {
-		if errors.Is(resultPc.Error, gorm.ErrRecordNotFound) {
-			return mp, fmt.Errorf("%s, %w", op, storage.ErrAppNotFound)
-		} else {
-			return mp, fmt.Errorf("%s, %w", op, resultPc.Error)
-		}
-	}
-
-	if resultPcState := a.db.Where("mNo = ?", mp.Pc.MNo).Find(&mp.PcState); resultPcState.Error != nil {
-		if errors.Is(resultPcState.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, storage.ErrAppNotFound)
-		} else {
-			a.log.Info("%s, %v", op, resultPcState.Error)
-		}
-	}
-
-	if resultPcInventory := a.db.Where("mPcNo = ?", mp.Pc.MNo).Find(&mp.PcInv); resultPcInventory.Error != nil {
-		if errors.Is(resultPcInventory.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, storage.ErrAppNotFound)
-		} else {
-			a.log.Info("%s, %v", op, resultPcInventory.Error)
-		}
-	}
-
-	if resultPcStore := a.db.Where("mUserNo = ?", mp.Pc.MOwner).Find(&mp.PcStore); resultPcStore.Error != nil {
-		if errors.Is(resultPcStore.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, storage.ErrAppNotFound)
-		} else {
-			a.log.Info("%s, %v", op, resultPcStore.Error)
-		}
-	} */
-
-
-
-	/* // Первая часть: Поиск по Member
-	resultMember := a.db.Table("Member m").
-		Select("*").
-		Joins("INNER JOIN TblUser u ON m.mUserId = u.mUserId").
-		Joins("INNER JOIN TblUserAdmin ua ON u.mUserNo = ua.mUserNo").
-		Where("m.email = ? OR m.mUserId = ?", mp.Member.Email, mp.Member.MUserId).
-		Find(&mp)
-
-	if resultMember.Error != nil {
+	if resultMember := a.db.
+	Where("email = ? OR mUserId = ?", name, name).
+	Find(&member); resultMember.Error != nil {
 		if errors.Is(resultMember.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, "record not found in Member")
+			return mp, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
 		} else {
-			a.log.Info("%s, %v", op, resultMember.Error)
+			return mp, fmt.Errorf("%s, %w", op, resultMember.Error)
 		}
-		errorsList = append(errorsList, resultMember.Error)
 	}
 
-	// Вторая часть: Поиск по имени персонажа
-	resultNikname := a.db.Table("TblPc pc").
-		Select("*").
-		Joins("INNER JOIN PcState pcState ON pc.mNo = pcState.mNo").
-		Joins("INNER JOIN TblPcInventory inventory ON pc.mNo = inventory.mPcNo").
-		Joins("INNER JOIN PcStore store ON pc.mNo = store.mNo").
-		Where("pc.mNm = ?", mp.Pc.MNm).
-		Find(&mp)
-
-	if resultNikname.Error != nil {
-		if errors.Is(resultNikname.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, "record not found by nickname")
-			
+ 	if resultUser := a.db.Where("mUserId = ?", member.MUserId).Find(&user); 
+	resultUser.Error != nil {
+		if errors.Is(resultUser.Error, gorm.ErrRecordNotFound) {
+			return mp, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
 		} else {
-			a.log.Info("%s, %v", op, resultNikname.Error)
+			return mp, fmt.Errorf("%s, %w", op, resultUser.Error)
 		}
-		errorsList = append(errorsList, resultNikname.Error)
+	} 
+
+	if resultUserAdmin := a.db.Where("mUserNo = ?", user.MUserNo).Find(&userAdmin); 
+	resultUserAdmin.Error != nil {
+		if errors.Is(resultUserAdmin.Error, gorm.ErrRecordNotFound) {
+			a.log.Info("%s, %w", op, storage.ErrNotFound)
+		} else {
+			a.log.Info("%s, %w", op, resultUserAdmin.Error)
+		}
 	}
 
-	// Если ошибок больше 2, вернуть пустоту и список ошибок
-	if len(errorsList) >= 2 {
-		return query.MemberParm{}, fmt.Errorf("%s, %v", op, errorsList)
-	} */
+/* 	mp.Member = member
+	mp.User = user
+	mp.UserAdmin = userAdmin */
 
 	return mp, nil
 }

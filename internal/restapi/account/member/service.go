@@ -7,7 +7,7 @@ import (
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
 	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/account/member"
-	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
+//	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,7 +21,8 @@ func init() {
 
 type Member interface {
 	// name = email, login, nikname
-	Member(ctx *fiber.Ctx, mp query.MemberParm) (memberParm query.MemberParm, err error)
+	//Member(ctx *fiber.Ctx, mp query.MemberParm) (memberParm query.MemberParm, err error)
+	Member(ctx *fiber.Ctx, name string) (memberParm query.MemberParm, err error)
 }
 
 type ServiceMemberAPI struct {
@@ -50,12 +51,12 @@ func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 	}
 
 	// TODO: проверить на валидацию логин или никнейм
-	login := gen.RemoveEmailSymbols(data["name"])
+	// login := gen.RemoveEmailSymbols(data["name"])
 
 	validMember := query.MemberParm{ 
 		Member: account.Member{ 
 			Email:   data["name"],
-			MUserId: login,
+			MUserId: data["name"], // login
 		},
 		Pc: game.Pc{ 
 			MNm: data["name"],
@@ -66,7 +67,7 @@ func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 		return fmt.Errorf("%s, %w", op, err)
 	}
 
-	resultMemberParm, err := s.member.Member(ctx, validMember)
+	resultMemberParm, err := s.member.Member(ctx, data["name"])
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

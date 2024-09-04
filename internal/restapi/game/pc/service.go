@@ -7,7 +7,7 @@ import (
 )
 
 type Pc interface {
-	PcCard(ctx *fiber.Ctx, nikname string) (pc game.PcParm, err error)
+	PcCard(ctx *fiber.Ctx, nikname string, pcID int64) (pc []game.PcParm, err error)
 }
 
 type ServiceGameAPI struct {

@@ -3,6 +3,7 @@ package query
 import (
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	gamePcParm "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
 )
 
 type MemberParm struct {
@@ -13,4 +14,5 @@ type MemberParm struct {
 	PcInv     game.PcInventory
 	PcState   game.PcState
 	PcStore   game.PcStore
+	PcCards   []gamePcParm.PcParm
 }
