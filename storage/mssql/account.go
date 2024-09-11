@@ -1,6 +1,7 @@
 package mssql
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -8,7 +9,9 @@ import (
 	"github.com/Tibirlayn/R2Hunter/internal/config"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
-	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	"github.com/Tibirlayn/R2Hunter/pkg/lib/conv"
+	query "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
 	"github.com/Tibirlayn/R2Hunter/storage"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/sqlserver"
@@ -17,7 +20,7 @@ import (
 
 type AccountStorage struct {
 	log *slog.Logger
-	db *gorm.DB
+	db  *gorm.DB
 }
 
 func NewAccountStorage(cfg_db *config.ConfigDB) (*AccountStorage, error) {
@@ -137,137 +140,67 @@ func (a *AccountStorage) App(ctx *fiber.Ctx, appID int) (models.App, error) {
 func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberParm, err error) {
 	const op = "storage.mssql.account.Member"
 
-	var member account.Member
-	var user account.User
-	var userAdmin account.UserAdmin
+	memberParm := query.MemberParm{
+		Members: []account.Member{},
+		Users: []account.User{},
+		Pcs: []game.Pc{},
+		PcInvs: []game.PcInventory{},
+		PcStates: []game.PcState{},
+		PcStores: []game.PcStore{},
 
-	if resultMember := a.db.
-	Where("email = ? OR mUserId = ?", name, name).
-	Find(&member); resultMember.Error != nil {
-		if errors.Is(resultMember.Error, gorm.ErrRecordNotFound) {
-			return mp, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
-		} else {
-			return mp, fmt.Errorf("%s, %w", op, resultMember.Error)
-		}
 	}
 
- 	if resultUser := a.db.Where("mUserId = ?", member.MUserId).Find(&user); 
-	resultUser.Error != nil {
-		if errors.Is(resultUser.Error, gorm.ErrRecordNotFound) {
-			return mp, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
-		} else {
-			return mp, fmt.Errorf("%s, %w", op, resultUser.Error)
-		}
-	} 
-
-	if resultUserAdmin := a.db.Where("mUserNo = ?", user.MUserNo).Find(&userAdmin); 
-	resultUserAdmin.Error != nil {
-		if errors.Is(resultUserAdmin.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %w", op, storage.ErrNotFound)
-		} else {
-			a.log.Info("%s, %w", op, resultUserAdmin.Error)
-		}
+	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUser(@Login)", sql.Named("Login", name)).Rows()
+	if err != nil {
+		a.log.Info("%s, %w", op, err)
+		return mp, fmt.Errorf("%s, %w", op, err)
 	}
 
-/* 	mp.Member = member
-	mp.User = user
-	mp.UserAdmin = userAdmin */
+	for rows.Next() {
+		var member account.IntermediateMember
+		var user account.IntermediateUser
+		var pc game.IntermediatePc
+		var pcInv game.IntermediatePcInventory
+		var pcState game.IntermediatePcState
+		var pcStore game.IntermediatePcStore
 
-	return mp, nil
-}
-
- /* func (a *AccountStorage) Member(ctx *fiber.Ctx, mp query.MemberParm) (query.MemberParm, error) {
-	const op = "storage.mssql.account.Member"
-
-	var errorsList []error
-
-	// Первая часть: Поиск по Member
-	resultMember := a.db.Table("Member m").
-		Select("*").
-		Joins("INNER JOIN TblUser u ON m.mUserId = u.mUserId").
-		Joins("INNER JOIN TblUserAdmin ua ON u.mUserNo = ua.mUserNo").
-		Where("m.email = ? OR m.mUserId = ?", mp.Member.Email, mp.Member.MUserId).
-		Find(&mp)
-
-	if resultMember.Error != nil {
-		if errors.Is(resultMember.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, "record not found in Member")
-		} else {
-			a.log.Info("%s, %v", op, resultMember.Error)
-		}
-		errorsList = append(errorsList, resultMember.Error)
-	}
-
-	// Вторая часть: Поиск по имени персонажа
-	resultNikname := a.db.Table("TblPc pc").
-		Select("*").
-		Joins("INNER JOIN PcState pcState ON pc.mNo = pcState.mNo").
-		Joins("INNER JOIN TblPcInventory inventory ON pc.mNo = inventory.mPcNo").
-		Joins("INNER JOIN PcStore store ON pc.mNo = store.mNo").
-		Where("pc.mNm = ?", mp.Pc.MNm).
-		Find(&mp)
-
-	if resultNikname.Error != nil {
-		if errors.Is(resultNikname.Error, gorm.ErrRecordNotFound) {
-			a.log.Info("%s, %s", op, "record not found by nickname")
+		err := rows.Scan(
+			&user.MRegDate,&user.MUserAuth,&user.MUserNo,&user.MUserId,&user.MUserPswd,&user.MCertifiedKey,
+			&user.MIp,&user.MLoginTm,&user.MLogoutTm,&user.MTotUseTm,&user.MWorldNo,&user.MDelDate,
+			&user.MPcBangLv,&user.MSecKeyTableUse,&user.MUseMacro,&user.MIpEX,&user.MJoinCode,
+			&user.MLoginChannelID,&user.MTired,&user.MChnSID,&user.MNewId,&user.MLoginSvrType,
+			&user.MAccountGuid,&user.MNormalLimitTime,&user.MPcBangLimitTime,&user.MRegIp,&user.MIsMovingToBattleSvr,
 			
-		} else {
-			a.log.Info("%s, %v", op, resultNikname.Error)
+			&member.MUserId,&member.MUserPswd,&member.Superpwd,&member.Cash,&member.Email,&member.Tgzh,
+			&member.Uid,&member.Klq,&member.Ylq,&member.Auth,&member.MSum,&member.IsAdmin,&member.Isdl,
+			&member.Dlmoney,&member.RegisterIp,&member.Country,&member.CashBack,
+			
+			&pc.MRegDate,&pc.MOwner,&pc.MSlot,&pc.MNo,&pc.MNm,&pc.MClass,&pc.MSex,&pc.MHead,&pc.MFace,
+			&pc.MBody,&pc.MHomeMapNo,&pc.MHomePosX,&pc.MHomePosY,&pc.MHomePosZ,&pc.MDelDate,
+			
+			&pcState.MNo,&pcState.MLevel,&pcState.MExp,&pcState.MHpAdd,&pcState.MHp,&pcState.MMpAdd,&pcState.MMp,
+			&pcState.MMapNo,&pcState.MPosX,&pcState.MPosY,&pcState.MPosZ,&pcState.MStomach,&pcState.MIp,
+			&pcState.MLoginTm,&pcState.MLogoutTm,&pcState.MTotUseTm,&pcState.MPkCnt,&pcState.MChaotic,
+			&pcState.MDiscipleJoinCount,&pcState.MPartyMemCntLevel,&pcState.MLostExp,&pcState.MIsLetterLimit,
+			&pcState.MFlag,&pcState.MIsPreventItemDrop,&pcState.MSkillTreePoint,&pcState.MRestExpGuild,
+			&pcState.MRestExpActivate,&pcState.MRestExpDeactivate,&pcState.MQMCnt,
+			&pcState.MGuildQMCnt,&pcState.MFierceCnt,&pcState.MBossCnt,
+			
+			&pcInv.MRegDate,&pcInv.MSerialNo,&pcInv.MPcNo,&pcInv.MItemNo,&pcInv.MEndDate,&pcInv.MIsConfirm,
+			&pcInv.MStatus,&pcInv.MCnt,&pcInv.MCntUse,&pcInv.MIsSeizure,&pcInv.MApplyAbnItemNo,
+			&pcInv.MApplyAbnItemEndDate,&pcInv.MOwner,&pcInv.MPracticalPeriod,&pcInv.MBindingType,
+			&pcInv.MRestoreCnt,&pcInv.MHoleCount,
+			
+			&pcStore.MRegDate,&pcStore.MSerialNo,&pcStore.MUserNo,&pcStore.MItemNo,&pcStore.MEndDate,
+			&pcStore.MIsConfirm,&pcStore.MStatus,&pcStore.MCnt,&pcStore.MCntUse,&pcStore.MIsSeizure,
+			&pcStore.MApplyAbnItemNo,&pcStore.MApplyAbnItemEndDate,&pcStore.MOwner,
+			&pcStore.MPracticalPeriod,&pcStore.MBindingType,&pcStore.MRestoreCnt,&pcStore.MHoleCount)
+		if err != nil {
+			return mp, fmt.Errorf("%s, %w", op, err)
 		}
-		errorsList = append(errorsList, resultNikname.Error)
+
+		conv.ConvMember(member, user, pc, pcInv, pcState, pcStore, &memberParm)
 	}
 
-	// Если ошибок больше 2, вернуть пустоту и список ошибок
-	if len(errorsList) >= 2 {
-		return query.MemberParm{}, fmt.Errorf("%s, %v", op, errorsList)
-	}
-
-	return mp, nil
-
-}  */
-
-
-/* 
-	resultMember := a.db.Table("Member m").
-		Select("*").
-		Joins("INNER JOIN TblUser u ON m.mUserId = u.mUserId").
-		Joins("INNER JOIN TblUserAdmin ua ON u.mUserNo = ua.mUserNo").
-		Where("m.email = ? OR m.mUserId = ?", mp.Member.Email, mp.Member.MUserId).Find(&mp); 
-	if resultMember.Error != nil {
-		if errors.Is(resultMember.Error, gorm.ErrRecordNotFound) {
-			// тут записать ошибку, но ничего не возращать 
-			query.MemberParm{}, fmt.Errorf("%s, %w", op, errors.New("record not found"))
-		}
-		// записать ошибку, но ничего не возращать 
-		query.MemberParm{}, fmt.Errorf("%s, %w", op, resultMember.Error)
-	} else {
-		a.db.Table("TblPc pc").Select("*").
-		Joins("INNER JOIN PcState pcState ON pc.mNo = pcState.mNo").
-		Joins("INNER JOIN TblPcInventory inventory ON pc.mNo = inventory.mPcNo").
-		Joins("INNER JOIN PcStore store ON u.mUserNo = store.mUserNo").
-		Where("pc.mNm = ?", mp.Pc.MNm).Find(&mp);
-	}
-
-	// Поиск по имени персонажа
-	resultNikname := a.db.Table("TblPc pc").Select("*").
-		Joins("INNER JOIN PcState pcState ON pc.mNo = pcState.mNo").
-		Joins("INNER JOIN TblPcInventory inventory ON pc.mNo = inventory.mPcNo").
-		Joins("INNER JOIN PcStore store ON u.mUserNo = store.mUserNo").
-		Where("pc.mNm = ?", mp.Pc.MNm)
-
-	if resultNikname.Error != nil {
-		if errors.Is(resultNikname.Error, gorm.ErrRecordNotFound) {
-			// тут записать ошибку, но ничего не возращать
-			query.MemberParm{}, fmt.Errorf("%s, %w", op, errors.New("record not found"))
-		}
-		// тут записать ошибку, но ничего не возращать
-		query.MemberParm{}, fmt.Errorf("%s, %w", op, resultNikname.Error)
-	} else {
-		a.db.Table("TblUser u").
-		Select("*").
-		Joins("INNER JOIN TblUserAdmin ua ON u.mUserNo = ua.mUserNo").
-		Joins("INNER JOIN Member m ON m.mUserId = u.mUserId").
-		Where("m.mUserNo = ?", mp.Pc.MOwner).Find(&mp);
-	}
-
-	// если ошибок = 2 тогда возращаем пустоту и список ошибок  */
+	return memberParm, nil
+}

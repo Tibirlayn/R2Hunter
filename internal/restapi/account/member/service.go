@@ -3,8 +3,8 @@ package member
 import (
 	"fmt"
 
-	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
-	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	 "github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
+	 //"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
 	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/account/member"
 //	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
@@ -50,27 +50,19 @@ func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 		return fmt.Errorf("%s, %s", op, "empty")
 	}
 
-	// TODO: проверить на валидацию логин или никнейм
-	// login := gen.RemoveEmailSymbols(data["name"])
-
-	validMember := query.MemberParm{ 
-		Member: account.Member{ 
-			Email:   data["name"],
-			MUserId: data["name"], // login
-		},
-		Pc: game.Pc{ 
-			MNm: data["name"],
-		},
+ 	validMember := account.Member{
+		Email: data["name"],
+		MUserId: data["name"],
 	}
 	
 	if err := validate.Struct(validMember); err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}
 
-	resultMemberParm, err := s.member.Member(ctx, data["name"])
+	resMemberParm, err := s.member.Member(ctx, data["name"])
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return ctx.JSON(resultMemberParm)
+	return ctx.JSON(resMemberParm)
 }

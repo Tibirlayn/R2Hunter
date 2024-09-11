@@ -38,7 +38,7 @@ func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
 		const op = "service.account.member.Member"
 
 		var memberParm query.MemberParm
-		var errorList []error
+		// var errorList []error
 
 		// TODO: проверка на авторизацию 
 		userID, err := m.auth.ValidJWT(ctx, op)
@@ -51,11 +51,15 @@ func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
 		resultMember, err := m.usrMemberProvider.Member(ctx, name)
 		if err != nil {
 			m.log.Info("%s, %w", op, err)
-			errorList = append(errorList, err)
+			// errorList = append(errorList, err)
 			return resultMember, err // Вернуть ошибку, если не удалось получить данные
 		}
 
-		memberParm = resultMember
+
+		return resultMember, nil
+}
+
+/* 		memberParm = resultMember
 
 		// Получаем срез pcCard, содержащий несколько PcParm
 		pcCards, err := m.pc.PcCard(ctx, name, int64(memberParm.User.MUserNo))
@@ -66,10 +70,7 @@ func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
 		}
 
 		// Присваиваем срез pcCards к полю PcCards структуры memberParm
-		memberParm.PcCards = pcCards
-
-		return resultMember, nil
-}
+		memberParm.PcCards = pcCards */
 
 
 /* 			
