@@ -8,6 +8,8 @@ import (
 
 	authRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/account/auth"
 	membRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/account/member"
+	gameRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/game/pc"
+	parmRestAPI "github.com/Tibirlayn/R2Hunter/internal/restapi/parm/item"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,11 +21,13 @@ type App struct {
 	address string
 }
 
-func New(log *slog.Logger, authService authRestAPI.Auth, memberService membRestAPI.Member, address string) *App {
+func New(log *slog.Logger, authService authRestAPI.Auth, memberService membRestAPI.Member, gameService gameRestAPI.Pc, parmService parmRestAPI.Item, address string) *App {
 	// инициализировать роутер: fiber
 	appFiber := fiber.New()
 	authRestAPI.Register(appFiber, authService)
 	membRestAPI.RegisterMember(appFiber, memberService)
+	gameRestAPI.RegisterGame(appFiber, gameService)
+	parmRestAPI.RegisterParm(appFiber, parmService)
 
 	return &App{
 		log: log,
@@ -41,15 +45,18 @@ func (a *App) MustLoad() {
 func (a *App) Run() error {
 	const op = "restapi.Run"
 
+	// необходимо почитать и переместить в другую папку middleware
+	a.appf.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000", // ваш фронтенд
+		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
+	}))
+	
+
 	if err :=  a.appf.Listen(a.address); err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}
-
-	// необходимо почитать и переместить в другую папку middleware
-	a.appf.Use(cors.New(cors.Config{
-		AllowCredentials: true,
-		AllowOrigins:     "http://localhost:3000",
-	}))
 
 	a.log.Info("rest api server started", slog.String("addr", a.address))
 

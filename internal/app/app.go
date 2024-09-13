@@ -10,6 +10,7 @@ import (
 	"github.com/Tibirlayn/R2Hunter/internal/service/account/auth"
 	"github.com/Tibirlayn/R2Hunter/internal/service/account/member"
 	"github.com/Tibirlayn/R2Hunter/internal/service/game/pc"
+	"github.com/Tibirlayn/R2Hunter/internal/service/parm/item"
 	"github.com/Tibirlayn/R2Hunter/storage/mssql"
 )
 
@@ -25,7 +26,7 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 		panic(err)
 	}
 
-	batStorage, err := mssql.NewBattleStorage(cfgdb)
+/* 	batStorage, err := mssql.NewBattleStorage(cfgdb)
 	if err != nil {
 		panic(err)
 	}
@@ -35,19 +36,19 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(bilStorage)
+	fmt.Println(bilStorage) */
 
 	gamStorage, err := mssql.NewGameStorage(cfgdb)
 	if err != nil {
 		panic(err)
 	}
 	
-	logStorage, err := mssql.NewLogsStorage(cfgdb)
+/* 	logStorage, err := mssql.NewLogsStorage(cfgdb)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(logStorage)
-
+*/
 	parStorage, err := mssql.NewParmStorage(cfgdb)
 	if err != nil {
 		panic(err)
@@ -58,12 +59,13 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(statStorage)
+	fmt.Println(statStorage) 
 
 	authService := auth.New(log, accStorage, accStorage, accStorage, tokenTLL)
-	gamService := pc.New(log, gamStorage, tokenTLL)
+	gamService := pc.New(log, gamStorage, authService, tokenTLL)
 	memberService := member.New(log, accStorage, authService, gamService, tokenTLL)
-	restapi := restapi.New(log, authService, memberService, address)
+	parmService := item.New(log, parStorage, authService, tokenTLL)
+	restapi := restapi.New(log, authService, memberService, gamService, parmService, address)
 
 	return &App{RestApi: restapi}
 }

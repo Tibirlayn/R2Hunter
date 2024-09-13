@@ -6,9 +6,10 @@ import (
 	"log/slog"
 
 	"github.com/Tibirlayn/R2Hunter/internal/config"
-	"github.com/Tibirlayn/R2Hunter/storage"
-	query "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
 	game "github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	query "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
+	queryGame "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
+	"github.com/Tibirlayn/R2Hunter/storage"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
@@ -42,6 +43,7 @@ func (s *GameStorage) Stop() error {
 	return db.Close()
 }
 
+// TODO: не используется
 func (g *GameStorage) PcCard(ctx *fiber.Ctx, name string, pcID int64) ([]query.PcParm, error) {
 	const op = "storage.mssql.game.PcCard" 
 
@@ -82,57 +84,48 @@ func (g *GameStorage) PcCard(ctx *fiber.Ctx, name string, pcID int64) ([]query.P
 	return pcParms, nil
  }
 
- 
+func (g *GameStorage) PcTopLVL(ctx *fiber.Ctx) ([]queryGame.PcTopLVL, error) {
+	const op = "storage.mssql.game.PcTopLVL" 
 
+	var pcTopLVL []queryGame.PcTopLVL
 
-/* 	Pc          []game.Pc
-	PcState     []game.PcState
-	PcInventory []game.PcInventory
-	PcStore     []game.PcStore */
-
-/* 	result := g.db.Table("TblPc AS pc").
-	Select("pc.*, pcState.*, inventory.*").
-	Joins("INNER JOIN TblPcState AS pcState ON pc.mNo = pcState.mNo").
-	Joins("INNER JOIN TblPcInventory AS inventory ON pc.mNo = inventory.mPcNo").
-	Where("pc.mNm = ? OR pc.mOwner = ?", name, pcID).
-	Find(&pc) 
-
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return pc, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
-		}
-		return pc, fmt.Errorf("%s, %w", op, result.Error)
-	} */
-
-
-/*  	if resultPc := g.db.Where("mNm = ? OR mOwner = ?", name, pcID).Find(&pc.Pc); resultPc.Error != nil {
-		if errors.Is(resultPc.Error, gorm.ErrRecordNotFound) {
-			return pc, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
-		} else {
-			return pc, fmt.Errorf("%s, %w", op, resultPc.Error)
-		}
+	if err := g.db.Table("TblPc AS a").
+		Select(`TOP 100 a.mNo AS ID, 
+				CASE
+					WHEN a.mClass = 0 THEN 'Рыцарь'
+					WHEN a.mClass = 1 THEN 'Рейджер'
+					WHEN a.mClass = 2 THEN 'Маг'
+					WHEN a.mClass = 3 THEN 'Ассасин'
+					WHEN a.mClass = 4 THEN 'Призыватель'
+					ELSE 'неизвестный класс'
+				END AS Class, 
+				RTRIM(a.mNm) AS Name,
+				b.mLevel AS Level, 
+				b.mChaotic AS Chaotic, 
+				b.mPkCnt AS PkCnt`).
+		Joins("JOIN TblPcState AS b ON a.mNo = b.mNo").
+		Where("a.mNo > ? AND LEFT(a.mNm, 1) <> ?", 0, ",").
+		Order("b.mLevel DESC").
+		Scan(&pcTopLVL).Error; err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
 	}
 
-	if resultPcState := g.db.Where("mNo = ?", pc.Pc.MNo).Find(&pc.PcState); resultPcState.Error != nil {
-		if errors.Is(resultPcState.Error, gorm.ErrRecordNotFound) {
-			g.log.Info("%s, %s", op, storage.ErrNotFound)
-		} else {
-			g.log.Info("%s, %v", op, resultPcState.Error)
-		}
-	}
+	return pcTopLVL, nil
+}
 
-	if resultPcInventory := g.db.Where("mPcNo = ?", pc.Pc.MNo).Find(&pc.PcInv); resultPcInventory.Error != nil {
-		if errors.Is(resultPcInventory.Error, gorm.ErrRecordNotFound) {
-			g.log.Info("%s, %s", op, storage.ErrNotFound)
-		} else {
-			g.log.Info("%s, %v", op, resultPcInventory.Error)
-		}
-	}
+func (g *GameStorage) PcTopByGold(ctx *fiber.Ctx) ([]queryGame.PcTopByGold, error) {
+	const op = "storage.mssql.game.PcTopByGold" 
 
-	if resultPcStore := g.db.Where("mUserNo = ?", pc.Pc.MOwner).Find(&pc.PcStore); resultPcStore.Error != nil {
-		if errors.Is(resultPcStore.Error, gorm.ErrRecordNotFound) {
-			g.log.Info("%s, %s", op, storage.ErrNotFound)
-		} else {
-			g.log.Info("%s, %v", op, resultPcStore.Error)
-		}
-	}  */
+	var pcTopByGold []queryGame.PcTopByGold
+
+	if err := g.db.Table("TblPc AS a").
+	Select("TOP 100 a.mOwner AS MOwner, b.mSerialNo AS MSerialNo, RTRIM(a.mNm) AS Name, b.mPcNo AS MPcNo, b.mItemNo AS MItemNo, b.mCnt AS MCnt").
+	Joins("INNER JOIN TblPcInventory AS b ON b.mPcNo = a.mNo").
+	Where("b.mItemNo = ? AND LEFT (a.mNm, 1) <> ?", 409, ",").
+	Order("b.mCnt DESC").
+	Scan(&pcTopByGold).Error; err != nil {
+	return nil, fmt.Errorf("%s, %w", op, err)
+}
+
+	return pcTopByGold, nil
+}

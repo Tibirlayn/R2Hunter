@@ -38,9 +38,8 @@ func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
 		const op = "service.account.member.Member"
 
 		var memberParm query.MemberParm
-		// var errorList []error
 
-		// TODO: проверка на авторизацию 
+		// проверка на авторизацию 
 		userID, err := m.auth.ValidJWT(ctx, op)
 		if err != nil {
 			return memberParm, err

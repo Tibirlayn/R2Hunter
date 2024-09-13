@@ -52,3 +52,4 @@ type IntermediatePc struct {
 func (IntermediatePc) TableName() string {
 	return "TblPc"
 }
+
