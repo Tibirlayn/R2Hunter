@@ -13,25 +13,27 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	// "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 type App struct {
-	log *slog.Logger
-	appf *fiber.App
+	log     *slog.Logger
+	appf    *fiber.App
 	address string
 }
 
 func New(log *slog.Logger, authService authRestAPI.Auth, memberService membRestAPI.Member, gameService gameRestAPI.Pc, parmService parmRestAPI.Item, address string) *App {
 	// инициализировать роутер: fiber
 	appFiber := fiber.New()
+
 	authRestAPI.Register(appFiber, authService)
 	membRestAPI.RegisterMember(appFiber, memberService)
 	gameRestAPI.RegisterGame(appFiber, gameService)
 	parmRestAPI.RegisterParm(appFiber, parmService)
 
 	return &App{
-		log: log,
-		appf: appFiber,
+		log:     log,
+		appf:    appFiber,
 		address: address,
 	}
 }
@@ -46,20 +48,25 @@ func (a *App) Run() error {
 	const op = "restapi.Run"
 
 	// необходимо почитать и переместить в другую папку middleware
-	a.appf.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000", // ваш фронтенд
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
-		AllowCredentials: true,
-	}))
-	
 
-	if err :=  a.appf.Listen(a.address); err != nil {
+	a.appf.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",                       // Разрешить ваш фронтенд
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Content-Length, Accept-Language, Accept-Encoding, Connection, Access-Control-Allow-Origin", // Разрешить нужные заголовки
+		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",             // Разрешить методы
+		ExposeHeaders:    "Refresh-Token",
+		AllowCredentials: true, // Разрешить отправку и получение куки и токенов
+	}))
+
+	a.appf.Use(func(c *fiber.Ctx) error {
+		log.Info("Получен запрос: %s %s", c.Method(), c.OriginalURL())
+		return c.Next()
+	})
+
+	if err := a.appf.Listen(a.address); err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}
 
 	a.log.Info("rest api server started", slog.String("addr", a.address))
-
 
 	return nil
 }

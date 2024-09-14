@@ -18,6 +18,7 @@ func main() {
 	// инициализировать логгер: log/slog
 	log := logger.SetupLogger(cfg.Env)
 	log.Info("starting application")
+	
 
 	// роутер
 	// routers.New(appf)

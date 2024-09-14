@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
-	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	routersAuth "github.com/Tibirlayn/R2Hunter/internal/routers/account/auth"
+	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -60,7 +60,7 @@ func (s *ServerAPI) Login(ctx *fiber.Ctx) error {
 	}
 
 	user := account.Member{
-		Email: data["email"],
+		Email:     data["email"],
 		MUserPswd: data["password"],
 	}
 
@@ -95,7 +95,7 @@ func (s *ServerAPI) Register(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&data); err != nil {
 		return err
 	}
-	
+
 	appID, err := strconv.Atoi(data["app_id"])
 	if err != nil {
 		return fmt.Errorf("%s: %s", op, appId)
@@ -104,8 +104,8 @@ func (s *ServerAPI) Register(ctx *fiber.Ctx) error {
 	login := gen.RemoveEmailSymbols(data["email"])
 
 	user := account.Member{
-		MUserId: login,
-		Email: data["email"],
+		MUserId:   login,
+		Email:     data["email"],
 		MUserPswd: data["password"],
 	}
 
