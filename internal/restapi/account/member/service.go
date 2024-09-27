@@ -3,11 +3,9 @@ package member
 import (
 	"fmt"
 
-	 "github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
-	 //"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
 	routersMember "github.com/Tibirlayn/R2Hunter/internal/routers/account/member"
-//	gen "github.com/Tibirlayn/R2Hunter/pkg/lib/genlogin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,9 +18,8 @@ func init() {
 }
 
 type Member interface {
-	// name = email, login, nikname
-	//Member(ctx *fiber.Ctx, mp query.MemberParm) (memberParm query.MemberParm, err error)
 	Member(ctx *fiber.Ctx, name string) (memberParm query.MemberParm, err error)
+	MemberAll(ctx *fiber.Ctx, name string) (memberPcItem query.MemberPcItem, err error)
 }
 
 type ServiceMemberAPI struct {
@@ -41,28 +38,54 @@ func (s *ServiceMemberAPI) Member(ctx *fiber.Ctx) error {
 		empty = "empty"
 	)
 
-	var data map[string]string
-	if err := ctx.BodyParser(&data); err != nil {
-		return fmt.Errorf("%s, %w", op, err)
-	}
+	name := ctx.Query("name")
 
-	if data["name"] == "" {
+	if name == "" {
 		return fmt.Errorf("%s, %s", op, "empty")
 	}
 
  	validMember := account.Member{
-		Email: data["name"],
-		MUserId: data["name"],
+		Email: name,
+		MUserId: name,
 	}
 	
 	if err := validate.Struct(validMember); err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}
 
-	resMemberParm, err := s.member.Member(ctx, data["name"])
+	resMemberParm, err := s.member.Member(ctx, name)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return ctx.JSON(resMemberParm)
+}
+
+func (s *ServiceMemberAPI) MemberAll(ctx *fiber.Ctx) error {
+	const (
+		op    = "restapi.account.member.Member"
+		empty = "empty"
+	)
+
+	name := ctx.Query("name")
+
+	if name == "" {
+		return fmt.Errorf("%s, %s", op, "empty")
+	}
+
+ 	validMember := account.Member{
+		Email: name,
+		MUserId: name,
+	}
+	
+	if err := validate.Struct(validMember); err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	resMember, err := s.member.MemberAll(ctx, name)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return ctx.JSON(resMember)
 }

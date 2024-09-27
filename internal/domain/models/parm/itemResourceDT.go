@@ -1,5 +1,7 @@
 package parm
 
+import "database/sql"
+
 // DT_ItemResource
 type ItemResource struct {
 	RID       int    `json:"RID" gorm:"column:RID;not null;primaryKey"`
@@ -12,4 +14,13 @@ type ItemResource struct {
 
 func (ItemResource) TableName() string {
 	return "DT_ItemResource"
+}
+
+type IntermediateItemResource struct {
+	RID       sql.NullInt64  `json:"RID"   gorm:"column:ItemResource_RID;not null;primaryKey"`
+	ROwnerID  sql.NullInt64  `json:"ROwnerID"  gorm:"column:ItemResource_ROwnerID"`
+	RType     sql.NullInt64  `json:"RType"   gorm:"column:ItemResource_RType"`
+	RFileName sql.NullString `json:"RFileName"  gorm:"column:ItemResource_RFileName"`
+	RPosX     sql.NullInt64  `json:"RPosX"   gorm:"column:ItemResource_RPosX"`
+	RPosY     sql.NullInt64  `json:"RPosY"   gorm:"column:ItemResource_RPosY"`
 }

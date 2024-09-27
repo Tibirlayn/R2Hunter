@@ -9,32 +9,32 @@ import (
 // "mRegDate", "mUserAuth", "mUserNo", "mUserId", "mUserPswd", "mCertifiedKey", "mIp", "mLoginTm", "mLogoutTm", "mTotUseTm", "mWorldNo", "mDelDate", "mPcBangLv", "mSecKeyTableUse", "mUseMacro", "mIpEx", "mJoinCode", "mLoginChannelID", "mTired", "mChnSID", "mNewId", "mLoginSvrType", "mAccountGuid", "mNormalLimitTime", "mPcBangLimitTime", "mRegIp", "mIsMovingToBattleSvr"
 type User struct {
 	MRegDate             time.Time `json:"mRegDate" gorm:"column:mRegDate"`                                  // Дата регистрации
-	MUserAuth            uint8     `json:"mUserAuth" gorm:"column:mUserAuth"`                                // Авторизация пользователя
-	MUserNo              int       `json:"mUserNo" gorm:"column:mUserNo;primaryKey"`                         // Идентификатор пользователя
-	MUserId              string    `json:"mUserId" gorm:"column:mUserId"`                                    // Уникальный номер пользователя
-	MUserPswd            string    `json:"mUserPswd" gorm:"column:mUserPswd"`                                // Пароль пользователя
-	MCertifiedKey        int       `json:"mCertifiedKey" gorm:"column:mCertifiedKey"`                        // Сертифицированный ключ
-	MIp                  string    `json:"mIp" gorm:"column:mIp"`                                            // IP-адрес
-	MLoginTm             time.Time `json:"mLoginTm" gorm:"not null;column:mLoginTm"`                         // Время входа
-	MLogoutTm            time.Time `json:"mLogoutTm" gorm:"not null;column:mLogoutTm"`                       // Время выхода
-	MTotUseTm            int       `json:"mTotUseTm" gorm:"column:mTotUseTm"`                                // Общее время использования
-	MWorldNo             int16     `json:"mWorldNo" gorm:"column:mWorldNo"`                                  // Номер мира
-	MDelDate             time.Time `json:"mDelDate" gorm:"column:mDelDate"`                                  // Дата удаления
-	MPcBangLv            int       `json:"mPcBangLv" gorm:"column:mPcBangLv"`                                // Уровень PcBang
-	MSecKeyTableUse      uint8     `json:"mSecKeyTableUse" gorm:"column:mSecKeyTableUse"`                    // Использование таблицы SecKey
-	MUseMacro            int16     `json:"mUseMacro" gorm:"column:mUseMacro"`                                // Использование макроса
-	MIpEX                int64     `json:"mIpEx" gorm:"column:mIpEx"`                                        // Дополнительный IP-адрес
-	MJoinCode            string    `json:"mJoinCode" gorm:"column:mJoinCode"`                                // Код приглашения
-	MLoginChannelID      string    `json:"mLoginChannelID" gorm:"column:mLoginChannelID"`                    // Идентификатор канала входа
-	MTired               string    `json:"mTired" gorm:"column:mTired"`                                      // Усталость
-	MChnSID              string    `json:"mChnSID" gorm:"column:mChnSID"`                                    // SID канала
-	MNewId               bool      `json:"mNewId" gorm:"column:mNewId"`                                      // Новый идентификатор
-	MLoginSvrType        uint8     `json:"mLoginSvrType" gorm:"column:mLoginSvrType"`                        // Тип сервера входа
-	MAccountGuid         int       `json:"mAccountGuid" gorm:"column:mAccountGuid"`                          // GUID аккаунта
-	MNormalLimitTime     int       `json:"mNormalLimitTime" gorm:"column:mNormalLimitTime"`                  // Лимит времени нормального использования
-	MPcBangLimitTime     int       `json:"mPcBangLimitTime" gorm:"column:mPcBangLimitTime"`                  // Лимит времени использования PcBang
-	MRegIp               string    `json:"mRegIp" gorm:"column:mRegIp"`                                      // IP-адрес при регистрации
-	MIsMovingToBattleSvr bool      `json:"mIsMovingToBattleSvr" gorm:"not null;column:mIsMovingToBattleSvr"` // Перемещается ли на боевой сервер
+	MUserAuth            uint8     `json:"mUserAuth" gorm:"column:mUserAuth;default:0"`                                // Авторизация пользователя
+	MUserNo              int       `json:"mUserNo" gorm:"column:mUserNo;primaryKey;default:0"`                         // Идентификатор пользователя
+	MUserId              string    `json:"mUserId" gorm:"column:mUserId;default:'null'"`                                    // Уникальный номер пользователя
+	MUserPswd            string    `json:"mUserPswd" gorm:"column:mUserPswd;default:'null'"`                                // Пароль пользователя
+	MCertifiedKey        int       `json:"mCertifiedKey" gorm:"column:mCertifiedKey;default:0"`                        // Сертифицированный ключ
+	MIp                  string    `json:"mIp" gorm:"column:mIp;default:'null'"`                                            // IP-адрес
+	MLoginTm             time.Time `json:"mLoginTm" gorm:"not null;column:mLoginTm;default:1900-01-01 00:00:00.000"`                         // Время входа
+	MLogoutTm            time.Time `json:"mLogoutTm" gorm:"not null;column:mLogoutTm;default:1900-01-01 00:00:00.000"`                       // Время выхода
+	MTotUseTm            int       `json:"mTotUseTm" gorm:"column:mTotUseTm;default:0"`                                // Общее время использования
+	MWorldNo             int16     `json:"mWorldNo" gorm:"column:mWorldNo;default:0"`                                  // Номер мира
+	MDelDate             time.Time `json:"mDelDate" gorm:"column:mDelDate;default:1900-01-01 00:00:00.000"`                                  // Дата удаления
+	MPcBangLv            int       `json:"mPcBangLv" gorm:"column:mPcBangLv;default:0"`                                // Уровень PcBang
+	MSecKeyTableUse      uint8     `json:"mSecKeyTableUse" gorm:"column:mSecKeyTableUse;default:0"`                    // Использование таблицы SecKey
+	MUseMacro            int16     `json:"mUseMacro" gorm:"column:mUseMacro;default:0"`                                // Использование макроса
+	MIpEX                int64     `json:"mIpEx" gorm:"column:mIpEx;default:0"`                                        // Дополнительный IP-адрес
+	MJoinCode            string    `json:"mJoinCode" gorm:"column:mJoinCode;default:'null'"`                                // Код приглашения
+	MLoginChannelID      string    `json:"mLoginChannelID" gorm:"column:mLoginChannelID;default:'null'"`                    // Идентификатор канала входа
+	MTired               string    `json:"mTired" gorm:"column:mTired;default:'null'"`                                      // Усталость
+	MChnSID              string    `json:"mChnSID" gorm:"column:mChnSID;default:'null'"`                                    // SID канала
+	MNewId               bool      `json:"mNewId" gorm:"column:mNewId;not null;default:0"`                                      // Новый идентификатор
+	MLoginSvrType        uint8     `json:"mLoginSvrType" gorm:"column:mLoginSvrType;default:0"`                        // Тип сервера входа
+	MAccountGuid         int       `json:"mAccountGuid" gorm:"column:mAccountGuid;default:0"`                          // GUID аккаунта
+	MNormalLimitTime     int       `json:"mNormalLimitTime" gorm:"column:mNormalLimitTime;default:0"`                  // Лимит времени нормального использования
+	MPcBangLimitTime     int       `json:"mPcBangLimitTime" gorm:"column:mPcBangLimitTime;default:0"`                  // Лимит времени использования PcBang
+	MRegIp               string    `json:"mRegIp" gorm:"column:mRegIp;default:'null'"`                                      // IP-адрес при регистрации
+	MIsMovingToBattleSvr bool      `json:"mIsMovingToBattleSvr" gorm:"column:mIsMovingToBattleSvr;not null;"` // Перемещается ли на боевой сервер
 }
 
 func (User) TableName() string {

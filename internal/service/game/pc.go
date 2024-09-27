@@ -7,6 +7,7 @@ import (
 
 	// "github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
 	queryGame "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
+
 	"github.com/Tibirlayn/R2Hunter/internal/service/account/auth"
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,6 +21,7 @@ type Pc struct {
 
 type GamePcProvider interface {
 	PcCard(ctx *fiber.Ctx, name string, pcID int64) ([]queryGame.PcParm, error)
+
 	PcTopLVL(ctx *fiber.Ctx) ([]queryGame.PcTopLVL, error)
 	PcTopByGold(ctx *fiber.Ctx) ([]queryGame.PcTopByGold, error)
 }

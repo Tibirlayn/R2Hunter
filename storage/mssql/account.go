@@ -10,8 +10,9 @@ import (
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
-	"github.com/Tibirlayn/R2Hunter/pkg/lib/conv"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/parm"
 	query "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
+	"github.com/Tibirlayn/R2Hunter/pkg/lib/conv"
 	"github.com/Tibirlayn/R2Hunter/storage"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/sqlserver"
@@ -147,10 +148,11 @@ func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberPar
 		PcInvs: []game.PcInventory{},
 		PcStates: []game.PcState{},
 		PcStores: []game.PcStore{},
-
+		ItemResources: []parm.ItemResource{},
+		Items: []parm.Item{},
 	}
 
-	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUser(@Login)", sql.Named("Login", name)).Rows()
+	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUserAll(@Login)", sql.Named("Login", name)).Rows()
 	if err != nil {
 		a.log.Info("%s, %w", op, err)
 		return mp, fmt.Errorf("%s, %w", op, err)
@@ -163,6 +165,8 @@ func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberPar
 		var pcInv game.IntermediatePcInventory
 		var pcState game.IntermediatePcState
 		var pcStore game.IntermediatePcStore
+		var item parm.IntermediateItem
+		var itemRes parm.IntermediateItemResource
 
 		err := rows.Scan(
 			&user.MRegDate,&user.MUserAuth,&user.MUserNo,&user.MUserId,&user.MUserPswd,&user.MCertifiedKey,
@@ -194,13 +198,129 @@ func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberPar
 			&pcStore.MRegDate,&pcStore.MSerialNo,&pcStore.MUserNo,&pcStore.MItemNo,&pcStore.MEndDate,
 			&pcStore.MIsConfirm,&pcStore.MStatus,&pcStore.MCnt,&pcStore.MCntUse,&pcStore.MIsSeizure,
 			&pcStore.MApplyAbnItemNo,&pcStore.MApplyAbnItemEndDate,&pcStore.MOwner,
-			&pcStore.MPracticalPeriod,&pcStore.MBindingType,&pcStore.MRestoreCnt,&pcStore.MHoleCount)
+			&pcStore.MPracticalPeriod,&pcStore.MBindingType,&pcStore.MRestoreCnt,&pcStore.MHoleCount,
+		
+			&itemRes.RID, &itemRes.ROwnerID, &itemRes.RType, &itemRes.RFileName, &itemRes.RPosX, &itemRes.RPosY,
+
+			&item.IID, &item.IName, &item.IType, &item.ILevel, &item.IDHIT, &item.IDDD,
+			&item.IRHIT, &item.IRDD, &item.IMHIT, &item.IMDD, &item.IHPPlus, &item.IMPPlus, &item.ISTR,
+			&item.IDEX, &item.IINT, &item.IMaxStack, &item.IWeight, &item.IUseType, &item.IUseNum, &item.IRecycle,
+			&item.IHPRegen, &item.IMPRegen, &item.IAttackRate, &item.IMoveRate, &item.ICritical, &item.ITermOfValidity, &item.ITermOfValidityMi,
+			&item.IDesc, &item.IStatus, &item.IFakeID, &item.IFakeName, &item.IUseMsg, &item.IRange, &item.IUseClass,
+			&item.IDropEffect, &item.IUseLevel, &item.IUseEternal, &item.IUseDelay, &item.IUseInAttack, &item.IIsEvent, &item.IIsIndict, &item.IAddWeight,
+			&item.ISubType, &item.IIsCharge, &item.INationOp, &item.IPShopItemType, &item.IQuestNo, &item.IIsTest, &item.IQuestNeedCnt,
+			&item.IContentsLv, &item.IIsConfirm, &item.IIsSealable, &item.IAddDDWhenCritical, &item.MSealRemovalNeedCnt, &item.MIsPracticalPeriod, &item.MIsReceiveTown,
+			&item.IIsReinforceDestroy, &item.IAddPotionRestore, &item.IAddMaxHpWhenTransform, &item.IAddMaxMpWhenTransform, &item.IAddAttackRateWhenTransform, &item.IAddMoveRateWhenTransform, 
+			&item.ISupportType, &item.ITermOfValidityLv, &item.MIsUseableUTGWSvr, &item.IAddShortAttackRange, &item.IAddLongAttackRange, &item.IWeaponPoisonType, &item.IDPV,
+			&item.IMPV, &item.IRPV, &item.IDDV, &item.IMDV, &item.IRDV, &item.IHDPV, &item.IHMPV, &item.IHRPV,
+			&item.IHDDV, &item.IHMDV, &item.IHRDV, &item.ISubDDWhenCritical, &item.IGetItemFeedback, &item.IEnemySubCriticalHit,
+			&item.IIsPartyDrop, &item.IMaxBeadHoleCount, &item.ISubTypeOption, &item.MIsDeleteArenaSvr)
 		if err != nil {
 			return mp, fmt.Errorf("%s, %w", op, err)
 		}
 
-		conv.ConvMember(member, user, pc, pcInv, pcState, pcStore, &memberParm)
+		conv.ConvMember(member, user, pc, pcInv, pcState, pcStore, item, itemRes, &memberParm)
 	}
 
 	return memberParm, nil
+}
+
+
+func (a *AccountStorage) MemberAll(ctx *fiber.Ctx, name string) (query.MemberPcItem, error) {
+	const op = "storage.mssql.account.MemberAll"
+
+	memberPcItem := query.MemberPcItem{
+		Members: []account.Member{},
+		Users: []account.User{},
+		Pcs: []game.Pc{},
+		PcInvs: []game.PcInventory{},
+		PcStates: []game.PcState{},
+		PcStores: []game.PcStore{},
+		ItemResources: []parm.ItemResource{},
+		Items: []parm.Item{},
+	}
+
+	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUserAll(@Login)", sql.Named("Login", name)).Rows()
+	if err != nil {
+		a.log.Info("%s, %w", op, err)
+		return query.MemberPcItem{}, fmt.Errorf("%s, %w", op, err)
+	}
+
+	for rows.Next() {
+		var member account.IntermediateMember
+		var user account.IntermediateUser
+		var pc game.IntermediatePc
+		var pcInv game.IntermediatePcInventory
+		var pcState game.IntermediatePcState
+		var pcStore game.IntermediatePcStore
+		var item parm.IntermediateItem
+		var itemRes parm.IntermediateItemResource
+
+		err := rows.Scan(
+			&user.MRegDate,&user.MUserAuth,&user.MUserNo,&user.MUserId,&user.MUserPswd,&user.MCertifiedKey,
+			&user.MIp,&user.MLoginTm,&user.MLogoutTm,&user.MTotUseTm,&user.MWorldNo,&user.MDelDate,
+			&user.MPcBangLv,&user.MSecKeyTableUse,&user.MUseMacro,&user.MIpEX,&user.MJoinCode,
+			&user.MLoginChannelID,&user.MTired,&user.MChnSID,&user.MNewId,&user.MLoginSvrType,
+			&user.MAccountGuid,&user.MNormalLimitTime,&user.MPcBangLimitTime,&user.MRegIp,&user.MIsMovingToBattleSvr,
+			
+			&member.MUserId,&member.MUserPswd,&member.Superpwd,&member.Cash,&member.Email,&member.Tgzh,
+			&member.Uid,&member.Klq,&member.Ylq,&member.Auth,&member.MSum,&member.IsAdmin,&member.Isdl,
+			&member.Dlmoney,&member.RegisterIp,&member.Country,&member.CashBack,
+			
+			&pc.MRegDate,&pc.MOwner,&pc.MSlot,&pc.MNo,&pc.MNm,&pc.MClass,&pc.MSex,&pc.MHead,&pc.MFace,
+			&pc.MBody,&pc.MHomeMapNo,&pc.MHomePosX,&pc.MHomePosY,&pc.MHomePosZ,&pc.MDelDate,
+			
+			&pcState.MNo,&pcState.MLevel,&pcState.MExp,&pcState.MHpAdd,&pcState.MHp,&pcState.MMpAdd,&pcState.MMp,
+			&pcState.MMapNo,&pcState.MPosX,&pcState.MPosY,&pcState.MPosZ,&pcState.MStomach,&pcState.MIp,
+			&pcState.MLoginTm,&pcState.MLogoutTm,&pcState.MTotUseTm,&pcState.MPkCnt,&pcState.MChaotic,
+			&pcState.MDiscipleJoinCount,&pcState.MPartyMemCntLevel,&pcState.MLostExp,&pcState.MIsLetterLimit,
+			&pcState.MFlag,&pcState.MIsPreventItemDrop,&pcState.MSkillTreePoint,&pcState.MRestExpGuild,
+			&pcState.MRestExpActivate,&pcState.MRestExpDeactivate,&pcState.MQMCnt,
+			&pcState.MGuildQMCnt,&pcState.MFierceCnt,&pcState.MBossCnt,
+			
+			&pcInv.MRegDate,&pcInv.MSerialNo,&pcInv.MPcNo,&pcInv.MItemNo,&pcInv.MEndDate,&pcInv.MIsConfirm,
+			&pcInv.MStatus,&pcInv.MCnt,&pcInv.MCntUse,&pcInv.MIsSeizure,&pcInv.MApplyAbnItemNo,
+			&pcInv.MApplyAbnItemEndDate,&pcInv.MOwner,&pcInv.MPracticalPeriod,&pcInv.MBindingType,
+			&pcInv.MRestoreCnt,&pcInv.MHoleCount,
+			
+			&pcStore.MRegDate,&pcStore.MSerialNo,&pcStore.MUserNo,&pcStore.MItemNo,&pcStore.MEndDate,
+			&pcStore.MIsConfirm,&pcStore.MStatus,&pcStore.MCnt,&pcStore.MCntUse,&pcStore.MIsSeizure,
+			&pcStore.MApplyAbnItemNo,&pcStore.MApplyAbnItemEndDate,&pcStore.MOwner,
+			&pcStore.MPracticalPeriod,&pcStore.MBindingType,&pcStore.MRestoreCnt,&pcStore.MHoleCount,
+		
+			&itemRes.RID, &itemRes.ROwnerID, &itemRes.RType, &itemRes.RFileName, &itemRes.RPosX, &itemRes.RPosY,
+
+			&item.IID, &item.IName, &item.IType, &item.ILevel, &item.IDHIT, &item.IDDD,
+			&item.IRHIT, &item.IRDD, &item.IMHIT, &item.IMDD, &item.IHPPlus, &item.IMPPlus, &item.ISTR,
+			&item.IDEX, &item.IINT, &item.IMaxStack, &item.IWeight, &item.IUseType, &item.IUseNum, &item.IRecycle,
+			&item.IHPRegen, &item.IMPRegen, &item.IAttackRate, &item.IMoveRate, &item.ICritical, &item.ITermOfValidity, &item.ITermOfValidityMi,
+			&item.IDesc, &item.IStatus, &item.IFakeID, &item.IFakeName, &item.IUseMsg, &item.IRange, &item.IUseClass,
+			&item.IDropEffect, &item.IUseLevel, &item.IUseEternal, &item.IUseDelay, &item.IUseInAttack, &item.IIsEvent, &item.IIsIndict, &item.IAddWeight,
+			&item.ISubType, &item.IIsCharge, &item.INationOp, &item.IPShopItemType, &item.IQuestNo, &item.IIsTest, &item.IQuestNeedCnt,
+			&item.IContentsLv, &item.IIsConfirm, &item.IIsSealable, &item.IAddDDWhenCritical, &item.MSealRemovalNeedCnt, &item.MIsPracticalPeriod, &item.MIsReceiveTown,
+			&item.IIsReinforceDestroy, &item.IAddPotionRestore, &item.IAddMaxHpWhenTransform, &item.IAddMaxMpWhenTransform, &item.IAddAttackRateWhenTransform, &item.IAddMoveRateWhenTransform, 
+			&item.ISupportType, &item.ITermOfValidityLv, &item.MIsUseableUTGWSvr, &item.IAddShortAttackRange, &item.IAddLongAttackRange, &item.IWeaponPoisonType, &item.IDPV,
+			&item.IMPV, &item.IRPV, &item.IDDV, &item.IMDV, &item.IRDV, &item.IHDPV, &item.IHMPV, &item.IHRPV,
+			&item.IHDDV, &item.IHMDV, &item.IHRDV, &item.ISubDDWhenCritical, &item.IGetItemFeedback, &item.IEnemySubCriticalHit,
+			&item.IIsPartyDrop, &item.IMaxBeadHoleCount, &item.ISubTypeOption, &item.MIsDeleteArenaSvr)
+		if err != nil {
+			return query.MemberPcItem{}, fmt.Errorf("%s, %w", op, err)
+		}
+
+		conv.ConvMemberAll(member, user, pc, pcInv, pcState, pcStore, item, itemRes, &memberPcItem)
+
+	}
+
+	return memberPcItem, nil
+}
+
+func (a *AccountStorage) MemberBil(ctx *fiber.Ctx, email string) (account.User, error) {
+	const op = "storage.mssql.account.MemberBil"
+
+	user := account.User{}
+	if err := a.db.Where("mUserId = ?", email).First(&user).Error; err != nil {
+		return account.User{}, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return user, nil
 }

@@ -7,12 +7,12 @@ import (
 
 type PcState struct {
 	MNo                int       `json:"mNo" gorm:"column:mNo;not null;primaryKey"`
-	MLevel             int16     `json:"mLevel" gorm:"column:mLevel;not null"`
-	MExp               int64     `json:"mExp" gorm:"column:mExp;not null"`
-	MHpAdd             int       `json:"mHpAdd" gorm:"column:mHpAdd;not null"`
-	MHp                int       `json:"mHp" gorm:"column:mHp;not null"`
+	MLevel             int16     `json:"mLevel" gorm:"column:mLevel;not null"` // Уровень
+	MExp               int64     `json:"mExp" gorm:"column:mExp;not null"` // Опыт
+	MHpAdd             int       `json:"mHpAdd" gorm:"column:mHpAdd;not null"` 
+	MHp                int       `json:"mHp" gorm:"column:mHp;not null"`	// HP
 	MMpAdd             int       `json:"mMpAdd" gorm:"column:mMpAdd;not null"`
-	MMp                int       `json:"mMp" gorm:"column:mMp;not null"`
+	MMp                int       `json:"mMp" gorm:"column:mMp;not null"` // MP
 	MMapNo             int       `json:"mMapNo" gorm:"column:mMapNo;not null"`
 	MPosX              float32   `json:"mPosX" gorm:"column:mPosX;not null"`
 	MPosY              float32   `json:"mPosY" gorm:"column:mPosY;not null"`

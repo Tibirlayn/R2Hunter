@@ -3,6 +3,7 @@ package conv
 import (
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/account"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
+	"github.com/Tibirlayn/R2Hunter/internal/domain/models/parm"
 	query "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/account"
 )
 
@@ -13,6 +14,8 @@ func ConvMember(
 		pcInv game.IntermediatePcInventory,
 		pcState game.IntermediatePcState,
 		pcStore game.IntermediatePcStore, 
+		item parm.IntermediateItem,
+		itemRes parm.IntermediateItemResource,
 		memberParm *query.MemberParm) {
 	
 	// conv
@@ -22,6 +25,8 @@ func ConvMember(
 	convPcInv := toPcInvResponse(pcInv)
 	convPcState := toPcStateResponse(pcState)
 	convPcStore := toPcStoreResponse(pcStore)
+	convItemRes := toItemResResponse(itemRes)
+	convItem := toItemResponse(item)
 
 	// add array
 	memberParm.Members = append(memberParm.Members, convMember)
@@ -30,6 +35,8 @@ func ConvMember(
 	memberParm.PcInvs = append(memberParm.PcInvs, convPcInv)
 	memberParm.PcStates = append(memberParm.PcStates, convPcState)
 	memberParm.PcStores = append(memberParm.PcStores, convPcStore)
+	memberParm.Items = append(memberParm.Items, convItem)
+	memberParm.ItemResources = append(memberParm.ItemResources, convItemRes)
 
 	// remove duplicate
 	memberParm.Members =  removeDuplicateMembers(memberParm.Members)
@@ -40,7 +47,150 @@ func ConvMember(
    	memberParm.PcStores = removeDuplicatePcStores(memberParm.PcStores)
 }
 
+func ConvMemberAll(
+	member account.IntermediateMember,
+	user account.IntermediateUser,
+	pc game.IntermediatePc,
+	pcInv game.IntermediatePcInventory,
+	pcState game.IntermediatePcState,
+	pcStore game.IntermediatePcStore, 
+	item parm.IntermediateItem,
+	itemRes parm.IntermediateItemResource,
+	memberParm *query.MemberPcItem) {
+			// conv
+			convMember := toMemberResponse(member)
+			convUser := toUserResponse(user)
+			convPc := toPcResponse(pc)
+			convPcInv := toPcInvResponse(pcInv)
+			convPcState := toPcStateResponse(pcState)
+			convPcStore := toPcStoreResponse(pcStore)
+			convItemRes := toItemResResponse(itemRes)
+			convItem := toItemResponse(item)
+
+			// add array
+			memberParm.Members = append(memberParm.Members, convMember)
+			memberParm.Users = append(memberParm.Users, convUser)
+			memberParm.Pcs = append(memberParm.Pcs, convPc)
+			memberParm.PcInvs = append(memberParm.PcInvs, convPcInv)
+			memberParm.PcStates = append(memberParm.PcStates, convPcState)
+			memberParm.PcStores = append(memberParm.PcStores, convPcStore)
+			memberParm.Items = append(memberParm.Items, convItem)
+			memberParm.ItemResources = append(memberParm.ItemResources, convItemRes)
+
+			// remove duplicate
+			memberParm.Members =  removeDuplicateMembers(memberParm.Members)
+			memberParm.Users =    removeDuplicateUsers(memberParm.Users)
+			memberParm.Pcs =      removeDuplicatePcs(memberParm.Pcs)
+			memberParm.PcInvs =   removeDuplicatePcInvs(memberParm.PcInvs)
+			memberParm.PcStates = removeDuplicatePcStates(memberParm.PcStates)
+			memberParm.PcStores = removeDuplicatePcStores(memberParm.PcStores)
+
+	}
+
 // TODO: можно сделать один запрос (подумать)
+func toItemResponse(item parm.IntermediateItem) parm.Item {
+	return parm.Item{
+		IID : int(item.IID.Int64),
+		IName : item.IName.String,
+		IType : int(item.IType.Int64),
+		ILevel : item.ILevel,
+		IDHIT : item.IDHIT,
+		IDDD : item.IDDD.String,
+		IRHIT : item.IRHIT,
+		IRDD : item.IRDD.String,
+		IMHIT : item.IMHIT,
+		IMDD : item.IMDD.String,
+		IHPPlus : item.IHPPlus,
+		IMPPlus : item.IMPPlus,
+		ISTR : item.ISTR,
+		IDEX : item.IDEX,
+		IINT : item.IINT,
+		IMaxStack : int(item.IMaxStack.Int64),
+		IWeight : item.IWeight,
+		IUseType : int(item.IUseType.Int64),
+		IUseNum : int(item.IUseNum.Int64),
+		IRecycle : int(item.IRecycle.Int64),
+		IHPRegen : item.IHPRegen,
+		IMPRegen : item.IMPRegen,
+		IAttackRate : item.IAttackRate,
+		IMoveRate : item.IMoveRate,
+		ICritical : item.ICritical,
+		ITermOfValidity : item.ITermOfValidity,
+		ITermOfValidityMi : item.ITermOfValidityMi,
+		IDesc : item.IDesc.String,
+		IStatus : item.IStatus,
+		IFakeID : int(item.IFakeID.Int64),
+		IFakeName : item.IFakeName.String,
+		IUseMsg : item.IUseMsg.String,
+		IRange : item.IRange,
+		IUseClass : item.IUseClass,
+		IDropEffect : int(item.IDropEffect.Int64),
+		IUseLevel : item.IUseLevel,
+		IUseEternal : item.IUseEternal,
+		IUseDelay : int(item.IUseDelay.Int64),
+		IUseInAttack : item.IUseInAttack,
+		IIsEvent : item.IIsEvent.Bool,
+		IIsIndict : item.IIsIndict.Bool,
+		IAddWeight : item.IAddWeight,
+		ISubType : item.ISubType,
+		IIsCharge : item.IIsCharge.Bool,
+		INationOp : item.INationOp.Int64,
+		IPShopItemType : item.IPShopItemType,
+		IQuestNo : int(item.IQuestNo.Int64),
+		IIsTest : item.IIsTest.Bool,
+		IQuestNeedCnt : item.IQuestNeedCnt,
+		IContentsLv : item.IContentsLv,
+		IIsConfirm : item.IIsConfirm.Bool,
+		IIsSealable : item.IIsSealable.Bool,
+		IAddDDWhenCritical : item.IAddDDWhenCritical,
+		MSealRemovalNeedCnt : item.MSealRemovalNeedCnt,
+		MIsPracticalPeriod : item.MIsPracticalPeriod.Bool,
+		MIsReceiveTown : item.MIsReceiveTown.Bool,
+		IIsReinforceDestroy : item.IIsReinforceDestroy.Bool,
+		IAddPotionRestore : item.IAddPotionRestore,
+		IAddMaxHpWhenTransform : item.IAddMaxHpWhenTransform,
+		IAddMaxMpWhenTransform : item.IAddMaxMpWhenTransform,
+		IAddAttackRateWhenTransform : item.IAddAttackRateWhenTransform,
+		IAddMoveRateWhenTransform : item.IAddMoveRateWhenTransform,
+		ISupportType : item.ISupportType,
+		ITermOfValidityLv : item.ITermOfValidityLv,
+		MIsUseableUTGWSvr : item.MIsUseableUTGWSvr.Bool,
+		IAddShortAttackRange : item.IAddShortAttackRange,
+		IAddLongAttackRange : item.IAddLongAttackRange,
+		IWeaponPoisonType : item.IWeaponPoisonType,
+		IDPV : item.IDPV,
+		IMPV : item.IMPV,
+		IRPV : item.IRPV,
+		IDDV : item.IDDV,
+		IMDV : item.IMDV,
+		IRDV : item.IRDV,
+		IHDPV : item.IHDPV,
+		IHMPV : item.IHMPV,
+		IHRPV : item.IHRPV,
+		IHDDV : item.IHDDV,
+		IHMDV : item.IHMDV,
+		IHRDV : item.IHRDV,
+		ISubDDWhenCritical : item.ISubDDWhenCritical,
+		IGetItemFeedback : item.IGetItemFeedback,
+		IEnemySubCriticalHit : item.IEnemySubCriticalHit,
+		IIsPartyDrop : item.IIsPartyDrop.Bool,
+		IMaxBeadHoleCount : item.IMaxBeadHoleCount,
+		ISubTypeOption : int(item.ISubTypeOption.Int64),
+		MIsDeleteArenaSvr : item.MIsDeleteArenaSvr.Bool,
+	}
+}
+
+func toItemResResponse(itemRes parm.IntermediateItemResource) parm.ItemResource {
+	return parm.ItemResource{
+		RID       : int(itemRes.RID.Int64),
+		ROwnerID  : int(itemRes.ROwnerID.Int64),
+		RType     : int(itemRes.RType.Int64),
+		RFileName : itemRes.RFileName.String,
+		RPosX     : int(itemRes.RPosX.Int64),
+		RPosY     : int(itemRes.RPosY.Int64),
+	}
+}
+
 func toMemberResponse(member account.IntermediateMember) account.Member {
 	return account.Member{
 		MUserId:    member.MUserId.String,     // string

@@ -20,9 +20,6 @@ func main() {
 	log.Info("starting application")
 	
 
-	// роутер
-	// routers.New(appf)
-
 	// инициализировать приложение (app):
 	application := app.New(log, cfg.HTTPServer.Address, cfgdb, cfg.TokenTTL);
 

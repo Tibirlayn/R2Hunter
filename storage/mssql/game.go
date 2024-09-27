@@ -16,7 +16,7 @@ import (
 )
 
 type GameStorage struct {
-	db *gorm.DB
+	db  *gorm.DB
 	log *slog.Logger
 }
 
@@ -45,47 +45,47 @@ func (s *GameStorage) Stop() error {
 
 // TODO: не используется
 func (g *GameStorage) PcCard(ctx *fiber.Ctx, name string, pcID int64) ([]query.PcParm, error) {
-	const op = "storage.mssql.game.PcCard" 
+	const op = "storage.mssql.game.PcCard"
 
 	var pcs []game.Pc
 	if result := g.db.Preload("PcInventories").
-	Where("pc.mNm = ? OR pc.mOwner = ?", name, pcID).
-	Find(&pcs); result.Error != nil {
+		Where("pc.mNm = ? OR pc.mOwner = ?", name, pcID).
+		Find(&pcs); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("%s, %w", op, storage.ErrUserNotFound)
 		}
 		return nil, fmt.Errorf("%s, %w", op, result.Error)
 	}
-	
+
 	var pcParms []query.PcParm
-    for _, pc := range pcs {
-        pcParm := query.PcParm{
+	for _, pc := range pcs {
+		pcParm := query.PcParm{
 			Pc: game.Pc{
-				MRegDate: pc.MRegDate,
-				MOwner:   pc.MOwner,
-				MSlot:    pc.MSlot,
-				MNo:      pc.MNo,
-				MNm:      pc.MNm,
-				MClass:   pc.MClass,
-				MSex:     pc.MSex,
-				MHead:    pc.MHead,
-				MFace:    pc.MFace,
-				MBody:    pc.MBody,
+				MRegDate:   pc.MRegDate,
+				MOwner:     pc.MOwner,
+				MSlot:      pc.MSlot,
+				MNo:        pc.MNo,
+				MNm:        pc.MNm,
+				MClass:     pc.MClass,
+				MSex:       pc.MSex,
+				MHead:      pc.MHead,
+				MFace:      pc.MFace,
+				MBody:      pc.MBody,
 				MHomeMapNo: pc.MHomeMapNo,
 				MHomePosX:  pc.MHomePosX,
 				MHomePosY:  pc.MHomePosY,
 				MHomePosZ:  pc.MHomePosZ,
 				MDelDate:   pc.MDelDate,
 			},
-        }
-        pcParms = append(pcParms, pcParm)
-    }
+		}
+		pcParms = append(pcParms, pcParm)
+	}
 
 	return pcParms, nil
- }
+}
 
 func (g *GameStorage) PcTopLVL(ctx *fiber.Ctx) ([]queryGame.PcTopLVL, error) {
-	const op = "storage.mssql.game.PcTopLVL" 
+	const op = "storage.mssql.game.PcTopLVL"
 
 	var pcTopLVL []queryGame.PcTopLVL
 
@@ -114,18 +114,20 @@ func (g *GameStorage) PcTopLVL(ctx *fiber.Ctx) ([]queryGame.PcTopLVL, error) {
 }
 
 func (g *GameStorage) PcTopByGold(ctx *fiber.Ctx) ([]queryGame.PcTopByGold, error) {
-	const op = "storage.mssql.game.PcTopByGold" 
+	const op = "storage.mssql.game.PcTopByGold"
 
 	var pcTopByGold []queryGame.PcTopByGold
 
 	if err := g.db.Table("TblPc AS a").
-	Select("TOP 100 a.mOwner AS MOwner, b.mSerialNo AS MSerialNo, RTRIM(a.mNm) AS Name, b.mPcNo AS MPcNo, b.mItemNo AS MItemNo, b.mCnt AS MCnt").
-	Joins("INNER JOIN TblPcInventory AS b ON b.mPcNo = a.mNo").
-	Where("b.mItemNo = ? AND LEFT (a.mNm, 1) <> ?", 409, ",").
-	Order("b.mCnt DESC").
-	Scan(&pcTopByGold).Error; err != nil {
-	return nil, fmt.Errorf("%s, %w", op, err)
-}
+		Select("TOP 100 a.mOwner AS MOwner, b.mSerialNo AS MSerialNo, RTRIM(a.mNm) AS Name, b.mPcNo AS MPcNo, b.mItemNo AS MItemNo, b.mCnt AS MCnt").
+		Joins("INNER JOIN TblPcInventory AS b ON b.mPcNo = a.mNo").
+		Where("b.mItemNo = ? AND LEFT (a.mNm, 1) <> ?", 409, ",").
+		Order("b.mCnt DESC").
+		Scan(&pcTopByGold).Error; err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
 
 	return pcTopByGold, nil
 }
+
+

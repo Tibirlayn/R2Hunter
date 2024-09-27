@@ -5,7 +5,7 @@ import (
 
 	//"github.com/Tibirlayn/R2Hunter/internal/domain/models/game"
 	queryGame "github.com/Tibirlayn/R2Hunter/internal/domain/models/query/game"
-	routersGame "github.com/Tibirlayn/R2Hunter/internal/routers/game/pc"
+	routersGame "github.com/Tibirlayn/R2Hunter/internal/routers/game"
 	"github.com/gofiber/fiber/v2"
 )
 

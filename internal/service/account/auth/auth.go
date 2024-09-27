@@ -120,6 +120,8 @@ func (a *Auth) RegisterNewUser(ctx *fiber.Ctx, user account.Member, appID int) (
 	return id, nil
 }
 
+
+
 func (a *Auth) ValidJWT(ctx *fiber.Ctx, op string) (int64, error) {
 	// получаем секрет
 	// TODO: должен брать из файла config 
