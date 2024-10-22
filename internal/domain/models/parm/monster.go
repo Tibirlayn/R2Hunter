@@ -3,22 +3,22 @@ package parm
 // DT_Monster
 type Moster struct {
 	MID                        int     `json:"MID" gorm:"column:MID;not null;primaryKey"`
-	MName                      string  `json:"MName" gorm:"column:MName;size:40"`
-	MLevel                     int     `json:"mLevel" gorm:"column:mLevel"`
-	MClass                     int     `json:"MClass" gorm:"column:MClass"`
-	MExp                       int     `json:"MExp" gorm:"column:MExp"`
-	MHIT                       int16   `json:"MHIT" gorm:"column:MHIT"`
-	MMinD                      int16   `json:"MMinD" gorm:"column:MMinD"`
-	MMaxD                      int16   `json:"MMaxD" gorm:"column:MMaxD"`
-	MAttackRateOrg             int16   `json:"MAttackRateOrg" gorm:"column:MAttackRateOrg"`
-	MMoveRateOrg               int16   `json:"MMoveRateOrg" gorm:"column:MMoveRateOrg"`
-	MAttackRateNew             int16   `json:"MAttackRateNew" gorm:"column:MAttackRateNew"`
-	MMoveRateNew               int16   `json:"MMoveRateNew" gorm:"column:MMoveRateNew"`
-	MHP                        int16   `json:"MHP" gorm:"column:MHP"`
-	MMP                        int16   `json:"MMP" gorm:"column:MMP"`
+	MName                      string  `json:"MName" gorm:"column:MName;size:40;default:0"`
+	MLevel                     int     `json:"mLevel" gorm:"column:mLevel;default:0"`
+	MClass                     int     `json:"MClass" gorm:"column:MClass;default:0"`
+	MExp                       int     `json:"MExp" gorm:"column:MExp;default:0"`
+	MHIT                       int16   `json:"MHIT" gorm:"column:MHIT;default:0"`
+	MMinD                      int16   `json:"MMinD" gorm:"column:MMinD;default:0"`
+	MMaxD                      int16   `json:"MMaxD" gorm:"column:MMaxD;default:0"`
+	MAttackRateOrg             int16   `json:"MAttackRateOrg" gorm:"column:MAttackRateOrg;default:0"`
+	MMoveRateOrg               int16   `json:"MMoveRateOrg" gorm:"column:MMoveRateOrg;default:0"`
+	MAttackRateNew             int16   `json:"MAttackRateNew" gorm:"column:MAttackRateNew;default:0"`
+	MMoveRateNew               int16   `json:"MMoveRateNew" gorm:"column:MMoveRateNew;default:0"`
+	MHP                        int16   `json:"MHP" gorm:"column:MHP;default:0"`
+	MMP                        int16   `json:"MMP" gorm:"column:MMP;default:0"`
 	MMoveRange                 int16   `json:"MMoveRange" gorm:"column:MMoveRange;not null"`
 	MGbjType                   int16   `json:"MGbjType" gorm:"column:MGbjType;not null"`
-	MRaceType                  int16   `json:"MRaceType" gorm:"column:MRaceType"`
+	MRaceType                  int16   `json:"MRaceType" gorm:"column:MRaceType;default:0"`
 	MAiType                    int16   `json:"MAiType" gorm:"column:MAiType;not null"`
 	MCastingDelay              int16   `json:"MCastingDelay" gorm:"column:MCastingDelay;not null"`
 	MChaotic                   int16   `json:"MChaotic" gorm:"column:MChaotic;not null"`
@@ -71,3 +71,67 @@ type Moster struct {
 func (Moster) TableName() string {
 	return "DT_Monster"
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -26,6 +26,8 @@ type UserMemberProvider interface {
 	Member(ctx *fiber.Ctx, name string) (query.MemberParm, error)
 	MemberAll(ctx *fiber.Ctx, name string) (query.MemberPcItem, error)
 	MemberBil(ctx *fiber.Ctx, email string) (account.User, error)
+	UserSearch(ctx *fiber.Ctx, name string) ([]account.User, error)
+	UserLastLogin(ctx *fiber.Ctx) ([]int, error)
 }
 
 func New(log *slog.Logger, userMemberProvider UserMemberProvider, auth *auth.Auth, pc *pc.Pc, tokenTTL time.Duration) *Member {
@@ -36,6 +38,23 @@ func New(log *slog.Logger, userMemberProvider UserMemberProvider, auth *auth.Aut
 		auth: auth,
 		tokenTTL: tokenTTL,
 	}
+}
+
+func (m *Member) UserSearch(ctx *fiber.Ctx, name string) ([]account.User, error) {
+	const op = "service.account.member.User"
+
+	// проверка на авторизацию 
+	_, err := m.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := m.usrMemberProvider.UserSearch(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return res, nil	
 }
 
 func (m *Member) Member(ctx *fiber.Ctx, name string) (query.MemberParm, error) {
@@ -93,6 +112,23 @@ func (m *Member) MemberBil(ctx *fiber.Ctx, email string) (account.User, error) {
 	res, err := m.usrMemberProvider.MemberBil(ctx, email)
 	if err != nil {
 		return account.User{}, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return res, nil
+}
+
+func (m *Member) UserLastLogin(ctx *fiber.Ctx) ([]int, error) {
+	const op = "service.account.member.MemberBil"
+
+	// проверка на авторизацию 
+	_, err := m.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	res, err := m.usrMemberProvider.UserLastLogin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
 	}
 
 	return res, nil

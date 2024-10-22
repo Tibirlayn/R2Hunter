@@ -2,6 +2,7 @@ package item
 
 type MonsterDrop struct {
 	Boss      string
+	BossID    int
 	NameGroup string
 	NameItem  string
 	ItemDesc  string

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/Tibirlayn/R2Hunter/internal/config"
 	"github.com/Tibirlayn/R2Hunter/internal/domain/models"
@@ -323,4 +324,30 @@ func (a *AccountStorage) MemberBil(ctx *fiber.Ctx, email string) (account.User, 
 	}
 
 	return user, nil
+}
+
+func (a *AccountStorage) UserSearch(ctx *fiber.Ctx, name string) ([]account.User, error) {
+	const op = "storage.mssql.account.User"
+
+	user := []account.User{}
+	if err := a.db.Where("MUserId LIKE '%' + ? + '%'", name).Find(&user).Error; err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (a *AccountStorage) UserLastLogin(ctx *fiber.Ctx) ([]int, error) {
+	const op = "storage.mssql.account.User"
+
+	user := []account.User{}
+	nowTime := time.Now()
+	last30Days := nowTime.AddDate(0, 0, -30)
+	userNo := []int{}
+	
+	if err := a.db.Model(&user).Where("mLoginTm >= ?", last30Days).Pluck("MUserNo", &userNo).Error; err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return userNo, nil
 }

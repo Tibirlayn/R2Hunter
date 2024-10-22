@@ -64,7 +64,7 @@ func New(log *slog.Logger, address string, cfgdb *config.ConfigDB, tokenTLL time
 	authService := auth.New(log, accStorage, accStorage, accStorage, tokenTLL)
 	gamService := pc.New(log, gamStorage, authService, tokenTLL)
 	memberService := member.New(log, accStorage, authService, gamService, tokenTLL)
-	parmService := parm.New(log, parStorage, authService, tokenTLL)
+	parmService := parm.New(log, parStorage, parStorage, parStorage, authService, tokenTLL)
 	billingService := billing.New(log, bilStorage, memberService, parmService, authService, tokenTLL)
 	restapi := restapi.New(log, authService, memberService, gamService, parmService, billingService, address)
 

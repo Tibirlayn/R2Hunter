@@ -27,8 +27,10 @@ type BillingProvider interface {
 	SysOrderList(ctx *fiber.Ctx) ([]billing.SysOrderList, error)
 	//посмотреть в определенном аккаунте
 	SysOrderListEmail(ctx *fiber.Ctx, id int) ([]billing.SysOrderList, error)
-	//выдать подарок всем персонажам
+	// выдать подарок персонажу
 	SetSysOrderList(ctx *fiber.Ctx, gift billing.SysOrderList) (billing.SysOrderList, error)
+	//выдать подарок всем персонажам
+	SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrderList, userNo []int) error
 }
 
 func New(log *slog.Logger, billingProvider BillingProvider, member *member.Member, parm *parm.Parm, auth *auth.Auth, tokenTTL time.Duration) *Billing {
@@ -123,6 +125,43 @@ func (b *Billing) SysOrderListEmail(ctx *fiber.Ctx, email string) ([]qBilling.So
 }
 
 func (b *Billing) SetSysOrderList(ctx *fiber.Ctx, gift billing.SysOrderList) (billing.SysOrderList, error) {
+	const op = "service.billing.SetSysOrderList"
 
-	return billing.SysOrderList{}, nil
+	user, err := b.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return billing.SysOrderList{}, err
+	}
+
+	gift.MSysID = user
+
+	// TODO: Проверить на существование пользователя (нужно но мне лень)
+
+	res, err := b.billingProvider.SetSysOrderList(ctx, gift)
+	if err != nil {
+		return gift, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return res, nil
+}
+
+func (b *Billing) SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrderList) error {
+	const op = "service.billing.SetSysOrderListAll"
+
+	user, err := b.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return err
+	}
+
+	gift.MSysID = user
+
+	resAuth, err := b.member.UserLastLogin(ctx)
+	if err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := b.billingProvider.SetSysOrderListAll(ctx, gift, resAuth); err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	return nil 
 }

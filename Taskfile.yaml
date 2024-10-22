@@ -1,0 +1,22 @@
+
+version: '3'
+
+tasks:
+  migrationAccount:
+    aliases:
+      - gen
+    desc: "Execute code migration Account"
+    cmds:
+      - go run ./cmd/migration/main.go --db-type=Account --migrations-path=./migrations/account
+  run:
+    aliases:
+      - gen
+    desc: "Execute application"
+    cmds:
+      - go run ./cmd/main
+  build:
+    aliases:
+      - gen
+    desc: "команда для Bash"
+    cmds:
+      - GOOS=windows GOARCH=amd64 go build -o myapp.exe

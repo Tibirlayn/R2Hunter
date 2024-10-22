@@ -5,15 +5,16 @@ import (
 )
 
 type BillingHandler interface {
-	SysOrderList(ctx *fiber.Ctx) error
-	SysOrderListEmail(ctx *fiber.Ctx) error
-	SetSysOrderList(ctx *fiber.Ctx) error
+	SysOrderList(ctx *fiber.Ctx) error // выдать все данные о падарках на всех персонажа (не очень нужна вещь)
+	SysOrderListEmail(ctx *fiber.Ctx) error // получить данные о подарках у персонажа
+	SetSysOrderList(ctx *fiber.Ctx) error // выдать подарок одному персонажу
+	SetSysOrderListAll(ctx *fiber.Ctx) error // выдать подарки всем персонажам
 	
-
 }
 
 func NewRoutersBilling(appf *fiber.App, api BillingHandler) {
 	appf.Get("gift", api.SysOrderList)
 	appf.Get("gift-email", api.SysOrderListEmail)
-	appf.Post("gift-all", api.SetSysOrderList)
+	appf.Post("add-gift", api.SetSysOrderList)
+	appf.Post("add-gift-all", api.SetSysOrderListAll)
 }
