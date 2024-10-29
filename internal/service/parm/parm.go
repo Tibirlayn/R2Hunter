@@ -46,9 +46,13 @@ type ParmProvider interface {
 	
 	UpdateMaterialDrawResult(ctx *fiber.Ctx, mdi parm.MaterialDrawResult) (string, error)
 	DeleteMaterialDrawResult(ctx *fiber.Ctx, seq int, mdrd int64, id int) (string, error)
+
 	SetMaterialDrawResult(ctx *fiber.Ctx, mdr parm.MaterialDrawResult) (parm.MaterialDrawResult, error)
+	SetMaterialDrawIndex(ctx *fiber.Ctx, mdi parm.MaterialDrawIndex, mdm parm.MaterialDrawMaterial) (string, error)
 
 	QuestReward(ctx *fiber.Ctx, pageNumber int, limitCnt int) ([]qParm.QuestRewardRes, error)
+	SetQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error)
+	DeleteQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error)
 }
 
 func New(log *slog.Logger, parmItemProvider ParmItemProvider, parmMonsterProvider ParmMonsterProvider, parmProvider ParmProvider, auth *auth.Auth, tokenTTL time.Duration) *Parm {
@@ -330,6 +334,54 @@ func (p *Parm) QuestReward(ctx *fiber.Ctx, pageNumber int, limitCnt int) ([]qPar
 	res, err := p.parmProvider.QuestReward(ctx, pageNumber, limitCnt)
 	if err != nil {
 		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return res, nil
+}
+
+func (p *Parm) SetQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error) {
+	const op = "service.parm.SetQuestReward"
+
+	_, err := p.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := p.parmProvider.SetQuestReward(ctx, qr)
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
+
+func (p *Parm) DeleteQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error) {
+	const op = "service.parm.SetQuestReward"
+
+	_, err := p.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := p.parmProvider.DeleteQuestReward(ctx, qr)
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
+
+func (p *Parm) SetMaterialDrawIndex(ctx *fiber.Ctx, mdi parm.MaterialDrawIndex, mdm parm.MaterialDrawMaterial) (string, error) {
+	const op = "service.parm.SetMaterialDrawIndex"
+
+	_, err := p.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := p.parmProvider.SetMaterialDrawIndex(ctx, mdi, mdm)
+	if err != nil {
+		return "", err
 	}
 
 	return res, nil

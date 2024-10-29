@@ -153,7 +153,7 @@ func (a *AccountStorage) Member(ctx *fiber.Ctx, name string) (mp query.MemberPar
 		Items: []parm.Item{},
 	}
 
-	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUserAll(@Login)", sql.Named("Login", name)).Rows()
+	rows, err := a.db.Raw("SELECT * FROM dbo.UspGetMemberUser(@Login)", sql.Named("Login", name)).Rows()
 	if err != nil {
 		a.log.Info("%s, %w", op, err)
 		return mp, fmt.Errorf("%s, %w", op, err)

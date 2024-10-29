@@ -25,6 +25,6 @@ type SysOrderList struct {
 }
 
 func (SysOrderList) TableName() string {
-	// return "TBLSysOrderList" TODO: edit
-	return "TBLSysOrderList_copy3"
+	return "TBLSysOrderList" 
+	//return "TBLSysOrderList_copy3"
 }

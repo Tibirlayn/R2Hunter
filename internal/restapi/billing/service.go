@@ -20,6 +20,9 @@ type Billing interface {
 	SetSysOrderList(ctx *fiber.Ctx, gift billing.SysOrderList) (billing.SysOrderList, error) 
 	// выдать подарок всем персонажам
 	SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrderList) error 
+	// Магазин
+	Shop(ctx *fiber.Ctx) ([]qBilling.ShopItemRes, error)
+	DeleteShop(ctx *fiber.Ctx, goldItemID int) (string, error)
 }
 
 type ServiceBillingAPI struct {
@@ -144,6 +147,39 @@ func (b *ServiceBillingAPI) SysOrderListEmail(ctx *fiber.Ctx) error {
 	}
 
 	res, err := b.billing.SysOrderListEmail(ctx, name)
+	if err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	return ctx.JSON(res)
+}
+
+func (b *ServiceBillingAPI) Shop(ctx *fiber.Ctx) error {
+	const (
+		op = "restapi.billing.Shop"
+		empty = "empty"
+	)
+
+	res, err := b.billing.Shop(ctx) 
+	if err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	return ctx.JSON(res)
+}
+
+func (b *ServiceBillingAPI) DeleteShop(ctx *fiber.Ctx) error {
+	const (
+		op = "restapi.billing.DeleteShop"
+		empty = "empty"
+	)
+
+	goldItemID := ctx.QueryInt("GoldItemID")
+	if goldItemID == 0 {
+		return fmt.Errorf("%s, %s", op, empty)
+	}
+
+	res, err := b.billing.DeleteShop(ctx, goldItemID) 
 	if err != nil {
 		return fmt.Errorf("%s, %w", op, err)
 	}

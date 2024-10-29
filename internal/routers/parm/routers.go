@@ -17,11 +17,14 @@ type ParmHandler interface {
 	UpdateMaterialDrawIndex(ctx *fiber.Ctx) error
 	UpdateMaterialDrawResult(ctx *fiber.Ctx) error
 	DeleteMaterialDrawResult(ctx *fiber.Ctx) error
+
 	SetMaterialDrawResult(ctx *fiber.Ctx) error 
+	SetMaterialDrawIndex(ctx *fiber.Ctx) error
 
 	ItemSearch(ctx *fiber.Ctx) error
 
 	QuestReward(ctx *fiber.Ctx) error
+	DeleteQuestReward(ctx *fiber.Ctx) error
 	SetQuestReward(ctx *fiber.Ctx) error
 	UpdateQuestReward(ctx *fiber.Ctx) error
 }
@@ -43,7 +46,10 @@ func NewRoutersParm(appf *fiber.App, api ParmHandler) {
 	appf.Delete("delete-mdrd", api.DeleteMaterialDrawResult)
 	appf.Post("add-mdr", api.SetMaterialDrawResult)
 
+	appf.Post("add-mdi", api.SetMaterialDrawIndex)
+
 	appf.Get("quest-reward", api.QuestReward)
 	appf.Post("add-quest-reward", api.SetQuestReward)
+	appf.Delete("delete-quest-reward", api.DeleteQuestReward)
 	appf.Put("update-quest-reward", api.UpdateQuestReward)
 }

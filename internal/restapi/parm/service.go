@@ -28,16 +28,18 @@ type Parm interface {
 	MaterialDraw(ctx *fiber.Ctx, name string) (qParm.MaterialDraw, error)
 	UpdateMaterialDrawResult(ctx *fiber.Ctx, mdi parm.MaterialDrawResult) (string, error)
 	ClearMaterialDraw(ctx *fiber.Ctx, id int) (string, error)
+	
 	UpdateMaterialDrawIndex(ctx *fiber.Ctx, mdi parm.MaterialDrawIndex) (string, error)
+	SetMaterialDrawIndex(ctx *fiber.Ctx, mdi parm.MaterialDrawIndex, mdm parm.MaterialDrawMaterial) (string, error)
+
 	DeleteMaterialDrawResult(ctx *fiber.Ctx, seq int, mdrd int64, id int) (string, error)
 	SetMaterialDrawResult(ctx *fiber.Ctx, mdr parm.MaterialDrawResult) (parm.MaterialDrawResult, error)
 
 	QuestReward(ctx *fiber.Ctx, pageNumber int, limitCnt int) ([]qParm.QuestRewardRes, error)
-	// SetQuestReward(ctx *fiber.Ctx) (string, error)
+	SetQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error)
 	// UpdateQuestReward(ctx *fiber.Ctx) (string, error)
+	DeleteQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error)
 }
-
-
 
 type ServiceParmAPI struct {
 	parm Parm
@@ -474,9 +476,47 @@ func (p *ServiceParmAPI) SetQuestReward(ctx *fiber.Ctx) error {
 		empty = "empty"
 	) 
 
-	
+	qr := parm.QuestReward{}
 
-	return ctx.JSON(nil)
+	if err := ctx.BodyParser(&qr); err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	res, err := p.parm.SetQuestReward(ctx, qr)
+	if err != nil {
+		return fmt.Errorf("%s, %s", op, err)
+	}
+
+	return ctx.JSON(res)
+}
+
+func (p *ServiceParmAPI) DeleteQuestReward(ctx *fiber.Ctx) error {
+	const (
+		op = "service.parm.DeleteQuestReward"
+		empty = "empty"
+	) 
+
+	qr := parm.QuestReward{}
+
+	// if err := ctx.BodyParser(&qr); err != nil {
+	// 	return fmt.Errorf("%s, %w", op, err)
+	// }
+
+	qr.MRewardNo = ctx.QueryInt("mRewardNo")
+	qr.MExp = int64(ctx.QueryInt("MExp"))
+	qr.MID = ctx.QueryInt("mID")     
+	qr.MCnt = ctx.QueryInt("mCnt")    
+	qr.MBinding = int8(ctx.QueryInt("mBinding"))
+	qr.MStatus = int8(ctx.QueryInt("mStatus") )
+	qr.MEffTime = ctx.QueryInt("mEffTime")
+	qr.MValTime = ctx.QueryInt("mValTime")
+
+	res, err := p.parm.DeleteQuestReward(ctx, qr)
+	if err != nil {
+		return fmt.Errorf("%s, %s", op, err)
+	}
+
+	return ctx.JSON(res)
 }
 
 func (p *ServiceParmAPI) UpdateQuestReward(ctx *fiber.Ctx) error {
@@ -488,4 +528,29 @@ func (p *ServiceParmAPI) UpdateQuestReward(ctx *fiber.Ctx) error {
 	
 
 	return ctx.JSON(nil)
+}
+
+func (p *ServiceParmAPI) SetMaterialDrawIndex(ctx *fiber.Ctx) error {
+	const (
+		op = "service.parm.SetMaterialDrawIndex"
+		empty = "empty"
+	)
+
+	type requestBody struct {
+		MDI parm.MaterialDrawIndex    `json:"mdi"`
+		MDM parm.MaterialDrawMaterial `json:"mdm"`
+	}
+
+	body := requestBody{}
+
+	if err := ctx.BodyParser(&body); err != nil {
+		return fmt.Errorf("%s, %w", op, err)
+	}
+
+	res, err := p.parm.SetMaterialDrawIndex(ctx, body.MDI, body.MDM)
+	if err != nil {
+		return fmt.Errorf("%s, %s", op, err)
+	}
+
+	return ctx.JSON(res)
 }

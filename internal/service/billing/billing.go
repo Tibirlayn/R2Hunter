@@ -31,6 +31,9 @@ type BillingProvider interface {
 	SetSysOrderList(ctx *fiber.Ctx, gift billing.SysOrderList) (billing.SysOrderList, error)
 	//выдать подарок всем персонажам
 	SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrderList, userNo []int) error
+	// Магазин
+	Shop(ctx *fiber.Ctx) ([]billing.GoldItem, error)
+	DeleteShop(ctx *fiber.Ctx, goldItemID int) (string, error)
 }
 
 func New(log *slog.Logger, billingProvider BillingProvider, member *member.Member, parm *parm.Parm, auth *auth.Auth, tokenTTL time.Duration) *Billing {
@@ -164,4 +167,85 @@ func (b *Billing) SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrderList) 
 	}
 
 	return nil 
+}
+
+func (b *Billing) Shop(ctx *fiber.Ctx) ([]qBilling.ShopItemRes, error) {
+	const op = "service.billing.Shop"
+
+	var ids []int
+	var sirs []qBilling.ShopItemRes
+
+	_, err := b.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	resBil, err := b.billingProvider.Shop(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	for _, n := range resBil{
+		ids = append(ids, n.IID)
+	}
+
+	resItem, err := b.parm.ItemsRessbyID(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	for _, order := range resBil {
+		var sir qBilling.ShopItemRes
+		sir.GoldItemID        = order.GoldItemID       
+		sir.GIID              = order.IID              
+		sir.ItemName          = order.ItemName         
+		sir.ItemImage         = order.ItemImage        
+		sir.ItemDesc          = order.ItemDesc         
+		sir.OriginalGoldPrice = order.OriginalGoldPrice
+		sir.GoldPrice         = order.GoldPrice        
+		sir.ItemCategory      = order.ItemCategory     
+		sir.IsPackage         = order.IsPackage        
+		sir.Status            = order.Status           
+		sir.AvailablePeriod   = order.AvailablePeriod  
+		sir.Count             = order.Count            
+		sir.PracticalPeriod   = order.PracticalPeriod  
+		sir.RegistDate        = order.RegistDate       
+		sir.RegistAdmin       = order.RegistAdmin      
+		sir.RegistIP          = order.RegistIP         
+		sir.UpdateDate        = order.UpdateDate       
+		sir.UpdateAdmin       = order.UpdateAdmin      
+		sir.UpdateIP          = order.UpdateIP         
+		sir.ItemNameRUS       = order.ItemNameRUS      
+		sir.ItemDescRUS       = order.ItemDescRUS      
+
+		for _, item := range resItem {
+			if item.IID == order.IID {
+				sir.IID               = item.IID      
+				sir.IName             = item.IName    
+				sir.RFileName         = item.RFileName
+				sir.RPosX             = item.RPosX    
+				sir.RPosY             = item.RPosY  
+			}
+		}
+
+		sirs = append(sirs, sir)
+	}
+
+	return sirs, nil
+}
+
+func (b *Billing) DeleteShop(ctx *fiber.Ctx, goldItemID int) (string, error) {
+	const op = "service.billing.DeleteShop"
+
+	_, err := b.auth.ValidJWT(ctx, op)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := b.billingProvider.DeleteShop(ctx, goldItemID)
+	if err != nil {
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	return res, nil
 }

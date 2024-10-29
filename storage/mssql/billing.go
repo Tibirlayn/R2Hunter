@@ -108,3 +108,77 @@ func (b *BillingStorage) SetSysOrderListAll(ctx *fiber.Ctx, gift billing.SysOrde
 	
 	return nil
 }
+
+func (b *BillingStorage) Shop(ctx *fiber.Ctx) ([]billing.GoldItem, error) {
+	const op = "storage.mssql.billing.Shop"
+
+	gi := []billing.GoldItem{}
+
+	if err := b.db.Find(&gi).Error; err != nil {
+		return nil, fmt.Errorf("%s, %w", op, err)
+	}
+
+	return gi, nil
+}
+
+func (b *BillingStorage) DeleteShop(ctx *fiber.Ctx, goldItemID int) (string, error) {
+	const op = "storage.mssql.billing.DeleteShop"
+
+	tx := b.db.Begin()
+	ca := billing.CategoryAssign{}
+	gi := billing.GoldItem{}
+	giss := billing.GoldItemSupportSvr{}
+
+	resCA := tx.Where("GoldItemID = ?", goldItemID).First(&ca)
+	resGI := tx.Where("GoldItemID = ?", goldItemID).First(&gi)
+	resGISS := tx.Where("GoldItemID = ?", goldItemID).First(&giss)
+
+	if resCA.Error != nil {
+		if resCA.RowsAffected == 0 {
+			tx.Rollback() // Откат транзакции при ошибке
+			return "", fmt.Errorf("%s: запись с условиями %d не найдена", op, goldItemID)
+		}
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, resCA.Error)
+	}
+
+	if resGI.Error != nil {
+		if resGI.RowsAffected == 0 {
+			tx.Rollback() // Откат транзакции при ошибке
+			return "", fmt.Errorf("%s: запись с условиями %d не найдена", op, goldItemID)
+		}
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, resGI.Error)
+	}
+
+	if resGISS.Error != nil {
+		if resGISS.RowsAffected == 0 {
+			tx.Rollback() // Откат транзакции при ошибке
+			return "", fmt.Errorf("%s: запись с условиями %d не найдена", op, goldItemID)
+		}
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, resGISS.Error)
+	}
+
+	if err := tx.Where("GoldItemID = ?", goldItemID).Delete(&ca).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Where("GoldItemID = ?", goldItemID).Delete(&gi).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Where("GoldItemID = ?", goldItemID).Delete(&giss).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+	
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	return "Data DeleteMaterialDrawResul", nil
+}

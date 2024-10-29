@@ -419,14 +419,19 @@ func (p *ParmStorage) DeleteMaterialDrawResult(ctx *fiber.Ctx, seq int, mdrd int
 		return "", fmt.Errorf("%s, %w", op, err)
 	}
 
-	return "Data update DeleteMaterialDrawResult", nil
+	return "Data DeleteMaterialDrawResult", nil
 } 
 
 func (p *ParmStorage) SetMaterialDrawResult(ctx *fiber.Ctx, mdr parm.MaterialDrawResult) (parm.MaterialDrawResult, error) {
 	const op = "storage.mssql.parm.SetMaterialDrawResult"
 
 	tx := p.db.Begin()
-	result := tx.Where("mSeq = ?", mdr.MSeq).First(&parm.MaterialDrawResult{}); 
+
+	var lastMSeq int 
+	tx.Raw("SELECT COALESCE(MAX(mSeq), 0) FROM TblMaterialDrawResult").Scan(&lastMSeq)
+	mdr.MSeq = lastMSeq + 1
+
+	result := tx.Where("mSeq = ?", mdr.MSeq).Find(&parm.MaterialDrawResult{}); 
 	
 	if result.RowsAffected >= 1 {
 		tx.Rollback()
@@ -470,4 +475,113 @@ func (p *ParmStorage) QuestReward(ctx *fiber.Ctx, pageNumber int, limitCnt int) 
     }
 	
 	return qr, nil
+}
+
+func (p *ParmStorage) SetQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error) {
+	const op = "storage.mssql.parm.SetQuestReward"
+	
+	tx := p.db.Begin()
+
+	if err := tx.Create(&qr).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	return "Data created", nil
+}
+
+func (p *ParmStorage) DeleteQuestReward(ctx *fiber.Ctx, qr parm.QuestReward) (string, error) {
+	const op = "storage.mssql.parm.DeleteQuestReward"
+	
+	tx := p.db.Begin()
+	resQR := parm.QuestReward{}
+
+	result := tx.Where("mRewardNo = ? AND MExp = ? AND mID = ? AND mCnt = ? AND mBinding = ? AND mStatus = ? AND mEffTime = ? AND mValTime = ?", 
+	qr.MRewardNo, qr.MExp, qr.MID, qr.MCnt, qr.MBinding, qr.MStatus, qr.MEffTime, qr.MValTime).First(&resQR)
+
+	// Проверка на ошибку выполнения запроса
+	if result.Error != nil {
+		if result.RowsAffected == 0 {
+			tx.Rollback() // Откат транзакции при ошибке
+			return "", fmt.Errorf("%s: запись с условиями %+v не найдена", op, qr)
+		}
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, result.Error)
+	}
+
+	if err := tx.Where("mRewardNo = ? AND MExp = ? AND mID = ? AND mCnt = ? AND mBinding = ? AND mStatus = ? AND mEffTime = ? AND mValTime = ?", 
+	qr.MRewardNo, qr.MExp, qr.MID, qr.MCnt, qr.MBinding, qr.MStatus, qr.MEffTime, qr.MValTime).Delete(&qr).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	return "Data created", nil
+}
+
+func (p *ParmStorage) SetMaterialDrawIndex(ctx *fiber.Ctx, mdi parm.MaterialDrawIndex, mdm parm.MaterialDrawMaterial) (string, error) {
+	const op = "storage.mssql.parm.SetMaterialDrawIndex"
+
+	tx := p.db.Begin()
+
+	var lastMDID int64 
+	tx.Raw("SELECT COALESCE(MAX(MDID), 0) FROM TblMaterialDrawIndex").Scan(&lastMDID)
+	mdi.MDID = lastMDID + 1
+	mdi.MDRD = lastMDID + 1
+
+	var lastMSeq int
+	tx.Raw("SELECT COALESCE(MAX(mSeq), 0) FROM TblMaterialDrawMaterial").Scan(&lastMSeq)
+	mdm.MSeq = lastMSeq + 1
+	mdm.MDID = lastMDID + 1
+
+	resultMDI := tx.Where("MDID = ? OR MDRD = ?", mdi.MDID, mdi.MDRD).Find(&parm.MaterialDrawIndex{}); 
+	resultMDM := tx.Where("mSeq = ?", mdm.MSeq).Find(&parm.MaterialDrawMaterial{}); 
+
+	if resultMDI.RowsAffected >= 1 {
+		tx.Rollback()
+		return "", fmt.Errorf("%s: запись %s существует", op, storage.ErrExists)
+	}
+
+	// Проверка на ошибку выполнения запроса
+	if resultMDI.Error != nil {
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, resultMDI.Error)
+	}
+
+	if resultMDM.RowsAffected >= 1 {
+		tx.Rollback()
+		return "", fmt.Errorf("%s: запись %s существует", op, storage.ErrExists)
+	}
+
+	// Проверка на ошибку выполнения запроса
+	if resultMDM.Error != nil {
+		tx.Rollback() // Откат транзакции при ошибке
+		return "", fmt.Errorf("%s, %w", op, resultMDM.Error)
+	}
+
+	if err := tx.Create(mdi).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Create(mdm).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("%s, %w", op, err)
+	}
+
+	return "Data created", nil
 }
