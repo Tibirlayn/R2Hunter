@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"path/filepath"
+	 //"path/filepath"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -41,6 +41,39 @@ type ConfigParm struct {
 }
 
 func MustLoad() (*Config, *ConfigDB) {
+	// Получаем путь к исполняемому файлу
+/* 	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Не удалось получить путь к исполняемому файлу: %v", err)
+	}
+
+	// Путь к файлу config.yaml в той же директории, что и .exe
+	configPath := filepath.Join(filepath.Dir(exePath), "local.yaml")
+	configDBPath := filepath.Join(filepath.Dir(exePath), "config.yaml")
+
+	// Проверка существования config.yaml
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Fatalf("Файл конфигурации не найден: %s", configPath)
+	}
+
+	// Загрузка основного конфигурационного файла
+	var cfg Config
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatalf("Не удалось загрузить конфигурацию: %v", err)
+	}
+
+	// Проверка существования config_db.yaml
+	if _, err := os.Stat(configDBPath); os.IsNotExist(err) {
+		log.Fatalf("Файл конфигурации БД не найден: %s", configDBPath)
+	}
+
+	// Загрузка конфигурации базы данных
+	var cfgdb ConfigDB
+	if err := cleanenv.ReadConfig(configDBPath, &cfgdb); err != nil {
+		log.Fatalf("Не удалось загрузить конфигурацию БД: %v", err)
+	} */
+
+
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set ")
@@ -56,7 +89,7 @@ func MustLoad() (*Config, *ConfigDB) {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
-/* 	configDBPath := os.Getenv("CONFIG_PATH_DB")
+	configDBPath := os.Getenv("CONFIG_PATH_DB")
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set ")
 	} 
@@ -64,9 +97,8 @@ func MustLoad() (*Config, *ConfigDB) {
 	if _, err := os.Stat(configDBPath); os.IsNotExist(err) {
 		log.Fatalf("config file does not exist: %s", configDBPath)
 	}
-*/
 
-	// Получаем путь к исполняемому файлу
+/* 	// Получаем путь к исполняемому файлу
 	exePath, err := os.Executable()
 	if err != nil {
 		log.Fatalf("Не удалось получить путь к исполняемому файлу: %v", err)
@@ -78,7 +110,7 @@ func MustLoad() (*Config, *ConfigDB) {
 	// Проверка существования config.yaml
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("Файл конфигурации не найден: %s", configPath)
-	}
+	} */
 
 	var cfgdb ConfigDB
 
@@ -86,8 +118,9 @@ func MustLoad() (*Config, *ConfigDB) {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
-	return &cfg, &cfgdb
 
+
+	return &cfg, &cfgdb
 }
 
 // TODO: parm.yaml 
