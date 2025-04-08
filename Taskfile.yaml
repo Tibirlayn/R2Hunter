@@ -13,7 +13,7 @@ tasks:
       - gen
     desc: "Execute application"
     cmds:
-      - go run ./cmd/main
+      - go run ./cmd/main.go
   build:
     aliases:
       - gen
